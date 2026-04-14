@@ -7,11 +7,15 @@
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",
-    "report": "playwright show-report"
+    "report": "playwright show-report",
+    "cucumber": "cucumber-js",
+    "cucumber:login": "cucumber-js features/login.feature"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "^12.8.1",
     "@playwright/test": "^1.59.1",
     "@types/node": "^22.15.3",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   }
 }
