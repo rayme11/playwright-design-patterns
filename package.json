@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "Playwright Design Patterns",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test:cucumber": "cucumber-js",
+    "test:playwright": "playwright test"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rayme11/playwright-design-patterns.git"
@@ -16,7 +19,9 @@
   },
   "homepage": "https://github.com/rayme11/playwright-design-patterns#readme",
   "devDependencies": {
+    "@cucumber/cucumber": "^12.7.0",
     "@playwright/test": "^1.59.1",
-    "@types/node": "^25.5.2"
+    "@types/node": "^25.5.2",
+    "ts-node": "^10.9.2"
   }
 }
