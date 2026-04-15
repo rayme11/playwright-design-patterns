@@ -51,29 +51,35 @@ This project tests against [**The Internet**](https://the-internet.herokuapp.com
 ```
 playwright-design-patterns/
 │
-├── tests/                          # Playwright Test specs (Chapters 1 & 2)
-│   ├── no-fixtures.spec.ts         # Raw test without fixtures (anti-pattern demo)
-│   ├── with-fixtures.spec.ts       # Built-in Playwright fixtures
-│   ├── customFixtures-data.spec.ts # Custom fixture definition
+├── tests/
+│   ├── no-fixtures.spec.ts            # Raw test, no fixture (anti-pattern demo)
+│   ├── with-fixtures.spec.ts          # Built-in Playwright fixtures
+│   ├── customFixtures-data.spec.ts    # Custom fixture definition
 │   ├── useCustomFixtures-data.spec.ts # Test consuming custom fixtures
-│   ├── example.spec.ts             # Basic sanity test
+│   ├── data-driven-login.spec.ts      # ★ Data-driven tests loaded from JSON
+│   ├── api-login.spec.ts              # ★ API tests + API+UI hybrid pattern
+│   ├── example.spec.ts                # Basic sanity test
+│   │
+│   ├── data/
+│   │   └── login.data.json            # ★ Externalised test data (valid/invalid users)
 │   │
 │   ├── fixtures/
-│   │   └── customData.ts           # Custom fixture: test data setup/teardown
+│   │   ├── customData.ts              # Inline fixture: hardcoded test data
+│   │   └── loginDataFixture.ts        # ★ Fixture that loads from JSON data file
 │   │
 │   └── pages/
-│       └── LoginPage.ts            # Page Object Model for the Login page
+│       └── LoginPage.ts               # Page Object Model for the Login page
 │
-├── features/                       # Cucumber BDD specs (Chapter 3)
-│   ├── login.feature               # Gherkin scenarios
-│   ├── step-definitions/           # Step implementations
+├── features/                          # Cucumber BDD specs (Chapter 3)
+│   ├── login.feature                  # Gherkin scenarios
+│   ├── step-definitions/              # Step implementations
 │   └── support/
-│       ├── world.ts                # Shared test context (browser, page)
-│       └── hooks.ts                # Before/After hooks (browser lifecycle)
+│       ├── world.ts                   # Shared test context (browser, page)
+│       └── hooks.ts                   # Before/After hooks (browser lifecycle)
 │
-├── playwright.config.ts            # Playwright configuration
-├── cucumber.json                   # Cucumber configuration
-├── tsconfig.json                   # TypeScript configuration
+├── playwright.config.ts               # Playwright configuration
+├── cucumber.json                      # Cucumber configuration
+├── tsconfig.json                      # TypeScript configuration
 └── package.json
 ```
 
@@ -199,17 +205,85 @@ npx playwright install
 
 ## Running Tests
 
-### Playwright tests (Fixtures + POM)
+Each concept in this project can be run independently. Use the commands below to explore each pattern on its own.
+
+---
+
+### Run everything
 
 ```bash
-# Run all Playwright specs
+# All Playwright specs (all chapters)
 npm run test:playwright
 
-# Open interactive HTML report after the run
-npx playwright show-report
+# All BDD / Cucumber specs
+npm run test:cucumber
 ```
 
-### BDD tests (Cucumber + Gherkin)
+---
+
+### Chapter 1 — No Fixtures (anti-pattern demo)
+
+> Shows what tests look like *without* any pattern. Useful as a baseline to understand why fixtures and POM matter.
+
+```bash
+npx playwright test no-fixtures --reporter=list,html && npx playwright show-report
+```
+
+---
+
+### Chapter 2a — Built-in Playwright Fixtures
+
+> Demonstrates Playwright's built-in `page` fixture vs manually launching a browser. Compare `no-fixtures.spec.ts` with `with-fixtures.spec.ts`.
+
+```bash
+npx playwright test with-fixtures --reporter=list,html && npx playwright show-report
+```
+
+---
+
+### Chapter 2b — Custom Fixtures
+
+> Shows how to define and consume a custom fixture that injects typed test data into tests.
+
+```bash
+npx playwright test useCustomFixtures-data --reporter=list,html && npx playwright show-report
+```
+
+---
+
+### Chapter 2c — Page Object Model (POM)
+
+> The POM is used across multiple specs. Run the custom fixtures test to see POM (`LoginPage.ts`) in action alongside fixtures.
+
+```bash
+npx playwright test useCustomFixtures-data --reporter=list,html && npx playwright show-report
+```
+
+---
+
+### Chapter 2d — Data-Driven Tests
+
+> Test cases are loaded from `tests/data/login.data.json`. Each JSON entry becomes a named test. Add new scenarios by editing the JSON — no code changes needed.
+
+```bash
+npx playwright test data-driven-login --reporter=list,html && npx playwright show-report
+```
+
+---
+
+### Chapter 2e — API Tests
+
+> Uses Playwright's built-in `request` fixture — no browser launched. Covers status codes, form POSTs, response headers, and an API+UI hybrid pattern.
+
+```bash
+npx playwright test api-login --reporter=list,html && npx playwright show-report
+```
+
+---
+
+### Chapter 3 — BDD with Cucumber (Gherkin)
+
+> Scenarios written in plain English (`Given / When / Then`) in `.feature` files. Step definitions wire them to Playwright actions.
 
 ```bash
 # Headless (default — CI friendly)
@@ -341,20 +415,71 @@ test('mock login API response', async ({ page }) => {
 
 ## Recommendations & Further Patterns
 
-### API Testing
+### Data-Driven Testing
 
-Playwright can test REST APIs directly — no browser needed:
+Test data lives in `tests/data/login.data.json`. Each entry is a self-describing object with a `description` field that becomes the test name automatically:
+
+```json
+{
+  "invalidUsers": [
+    { "description": "wrong password",    "username": "tomsmith", "password": "wrongpassword", "expectedMessage": "Your password is invalid!" },
+    { "description": "unknown username",  "username": "baduser",  "password": "password123",   "expectedMessage": "Your username is invalid!" },
+    { "description": "empty credentials", "username": "",         "password": "",              "expectedMessage": "Your username is invalid!" }
+  ]
+}
+```
+
+The spec loops over the array — **no code changes needed to add new scenarios**, only data:
 
 ```ts
-test('API login returns 200', async ({ request }) => {
-  const res = await request.post('/api/login', {
-    data: { username: 'tomsmith', password: 'SuperSecretPassword!' }
-  });
-  expect(res.status()).toBe(200);
+// tests/data-driven-login.spec.ts
+for (const user of loginData.invalidUsers) {
+    test(`[invalid] ${user.description}`, async ({ page }) => {
+        const loginPage = new LoginPage(page);
+        await loginPage.goto();
+        await loginPage.login(user.username, user.password);
+        await expect(loginPage.flashError).toContainText(user.expectedMessage);
+    });
+}
+```
+
+The same data is also available as a **fixture** (`tests/fixtures/loginDataFixture.ts`) if you prefer dependency injection over direct imports.
+
+---
+
+### API Testing
+
+Playwright's built-in `request` fixture makes HTTP calls without a browser. See `tests/api-login.spec.ts` for the full suite. Key patterns:
+
+**Status code check:**
+```ts
+test('login page returns 200', async ({ request }) => {
+    const response = await request.get('https://the-internet.herokuapp.com/login');
+    expect(response.status()).toBe(200);
 });
 ```
 
-Combine API + UI: use the API to create test data, then verify it in the browser — faster and more reliable than UI-only setup.
+**Form POST and body assertion:**
+```ts
+test('valid credentials POST returns success', async ({ request }) => {
+    const response = await request.post('https://the-internet.herokuapp.com/authenticate', {
+        form: { username: 'tomsmith', password: 'SuperSecretPassword!' }
+    });
+    const body = await response.text();
+    expect(body).toContain('You logged into a secure area!');
+});
+```
+
+**API + UI hybrid** — health-check the endpoint via API, then run the UI flow:
+```ts
+test('API health check then UI login', async ({ page, request }) => {
+    const apiCheck = await request.get('https://the-internet.herokuapp.com/login');
+    expect(apiCheck.status()).toBe(200);          // fast API gate
+
+    await page.goto('https://the-internet.herokuapp.com/login');
+    // ... full UI login flow
+});
+```
 
 ---
 

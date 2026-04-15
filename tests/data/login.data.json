@@ -1,0 +1,30 @@
+{
+    "validUsers": [
+        {
+            "description": "standard valid user",
+            "username": "tomsmith",
+            "password": "SuperSecretPassword!",
+            "expectedMessage": "You logged into a secure area!"
+        }
+    ],
+    "invalidUsers": [
+        {
+            "description": "wrong password",
+            "username": "tomsmith",
+            "password": "wrongpassword",
+            "expectedMessage": "Your password is invalid!"
+        },
+        {
+            "description": "unknown username",
+            "username": "baduser",
+            "password": "password123",
+            "expectedMessage": "Your username is invalid!"
+        },
+        {
+            "description": "empty credentials",
+            "username": "",
+            "password": "",
+            "expectedMessage": "Your username is invalid!"
+        }
+    ]
+}
