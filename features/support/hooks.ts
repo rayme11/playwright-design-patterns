@@ -6,7 +6,7 @@ import { LoginPage } from '../../tests/pages/LoginPage';
 
 // Launch a new browser + page before each scenario
 Before(async function (this: ICustomWorld) {
-    this.browser = await chromium.launch({ headless: true });
+    this.browser = await chromium.launch({ headless: process.env.HEADLESS !== 'false' });
     this.context = await this.browser.newContext();
     this.page = await this.context.newPage();
     this.loginPage = new LoginPage(this.page);
