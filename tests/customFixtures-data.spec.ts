@@ -24,8 +24,7 @@ const test = base.extend<CustomFixtures>({
 
         // You can also perform any teardown here if necessary
     }
-});import { test, expect } from './fixtures/customData';
-// ...existing code...
+})
 
 
 export { test, expect };
