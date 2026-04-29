@@ -24,6 +24,11 @@ const test = base.extend<CustomFixtures>({
 
         // You can also perform any teardown here if necessary
     }
+});import { test, expect } from './fixtures/customData';
+// ...existing code...
+
+test('deliberate failure for CI demo', async () => {
+  expect(true).toBe(false);
 });
 
 export { test, expect };
