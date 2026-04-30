@@ -16,6 +16,7 @@ A hands-on reference project demonstrating how to apply software design patterns
 - [Playwright Examples](#playwright-examples)
 - [Debugging](#debugging)
 - [Recommendations & Further Patterns](#recommendations--further-patterns)
+- [Troubleshooting & CI/CD Agentic Chapters](#troubleshooting--cd-agentic-chapters)
 
 ---
 
@@ -38,10 +39,12 @@ This project tests against [**The Internet**](https://the-internet.herokuapp.com
 | Detail | Value |
 |---|---|
 | URL | https://the-internet.herokuapp.com |
-| Login page | https://the-internet.herokuapp.com/login |
-| Valid credentials | `tomsmith` / `SuperSecretPassword!` |
+| Public demo credentials | `tomsmith` / `SuperSecretPassword!` (public demo-only credentials for this practice site) |
 | Hosting | Heroku free tier (may have cold-start delays) |
 
+> No account or setup required — just run the tests and they hit the live site.
+>
+> Security note: these credentials are publicly available demo credentials for the external practice site and are included here only for convenience. They are not application secrets and should not be treated as an example for documenting production credentials.
 > No account or setup required — just run the tests and they hit the live site.
 
 ---
@@ -504,3 +507,36 @@ test('API health check then UI login', async ({ page, request }) => {
 - Never hard-code URLs — use `baseURL` from config
 - Tag BDD scenarios (`@smoke`, `@regression`) to run subsets: `npx cucumber-js --tags @smoke`
 - Store sensitive credentials in environment variables, never in source code
+
+---
+
+## Troubleshooting & CI/CD Agentic Chapters
+
+### Common Issues & How to Fix
+
+| Symptom | Possible Cause | How to Fix |
+|---|---|---|
+| Lint errors (e.g. `no-empty-pattern`, `not defined`) | ESLint/TypeScript config mismatch, Playwright fixture destructuring | See `.eslintrc.json` for rules. For Playwright fixtures, use `async ({}, use)` and add `// eslint-disable-next-line no-empty-pattern` above the line. Run `npx eslint . --ext .ts --format unix` locally before pushing. |
+| `process is not defined` in config | Missing import | Add `import process from 'process';` to `playwright.config.ts`. |
+| `defineConfig` or `devices` not defined | Missing import | Add `import { defineConfig, devices } from '@playwright/test';` to `playwright.config.ts`. |
+| Tests fail on CI but pass locally | Environment differences, missing dependencies | Ensure Node.js version matches (`node -v`). Run `npm ci` and `npx playwright install` locally. |
+| Browser not launching | Playwright browsers not installed | Run `npx playwright install --with-deps`. |
+| Cucumber step errors | Step definition signature mismatch | Ensure step definitions match Gherkin steps. Remove unused `this` or use `// @ts-ignore` if required by Cucumber. |
+| API tests fail | Heroku app cold start or downtime | Retry after a few minutes. |
+
+### Agentic Chapters & Live Agenda
+
+This project is designed for agentic, step-by-step learning and real-world CI/CD scenarios. Each chapter builds on the previous, and you can go agentic (let an agent or automation guide/fix/extend) at any point:
+
+- **Chapter 1:** Baseline tests, no patterns (manual, anti-pattern)
+- **Chapter 2:** Fixtures, POM, data-driven, API, custom patterns
+- **Chapter 3:** BDD with Cucumber, step definitions, hooks
+- **Chapter 4:** CI/CD with GitHub Actions, linting, security scan, Playwright in CI
+- **Chapter 5+:** Agentic workflows — let an agent (e.g. GitHub Copilot, custom bot) fix lint errors, update config, or refactor code. Use PRs, issues, and CI feedback to drive improvements. Keep the agenda live: always address CI failures, lint errors, and code review feedback as they arise.
+
+#### How to Go Agentic
+
+1. **Check CI/CD status:** Review GitHub Actions for failed jobs (test, lint, security).
+2. **Run jobs locally:** Use the same commands as in `.github/workflows/ci.yml` (e.g. `npx eslint . --ext .ts --format unix`, `npx playwright test`).
+3. **Let the agent fix issues:** Use Copilot or your automation to apply fixes, explain changes, and commit.
+4. **Document troubleshooting:** Update this README with new issues and solutions as you encounter them.
