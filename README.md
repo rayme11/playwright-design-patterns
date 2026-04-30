@@ -540,3 +540,82 @@ This project is designed for agentic, step-by-step learning and real-world CI/CD
 2. **Run jobs locally:** Use the same commands as in `.github/workflows/ci.yml` (e.g. `npx eslint . --ext .ts --format unix`, `npx playwright test`).
 3. **Let the agent fix issues:** Use Copilot or your automation to apply fixes, explain changes, and commit.
 4. **Document troubleshooting:** Update this README with new issues and solutions as you encounter them.
+
+---
+
+## CI/CD Pipeline (Chapter 5+)
+
+This project uses GitHub Actions for continuous integration. On every push or pull request, the following jobs run:
+
+- **Test:** Runs all Playwright tests headlessly and uploads the HTML report as an artifact.
+- **Lint:** Runs ESLint on all TypeScript files using the command:
+  ```bash
+  npx eslint . --ext .ts --format unix
+  ```
+  Run this locally before pushing to avoid CI failures.
+- **Security:** Runs `npm audit --audit-level=moderate --json > audit.json || true` and uploads the audit report as an artifact.
+
+See `.github/workflows/ci.yml` for details.
+
+---
+
+## NPM Scripts
+
+- `npm run test:playwright` — Run all Playwright specs (recommended for CI and local dev)
+- `npm run test:cucumber` — Run all BDD/Cucumber specs
+
+---
+
+## Linting & Fixture Patterns
+
+- Playwright custom fixtures must use the object destructuring pattern for the first argument:
+  ```ts
+  // eslint-disable-next-line no-empty-pattern
+  customData: async ({}, use) => { ... }
+  ```
+  This disables the ESLint `no-empty-pattern` rule only for this line, which is required by Playwright's API.
+- Always run `npx eslint . --ext .ts --format unix` locally before pushing to catch issues early.
+
+---
+
+## Security Scan
+
+- The security job in CI runs `npm audit` and uploads the results. Review the `audit.json` artifact for vulnerabilities.
+
+---
+
+## Agentic/Live Agenda (Chapter 5+)
+
+From Chapter 5 onward, this project adopts an agentic workflow:
+- Use automation (Copilot, bots, or scripts) to fix, lint, and refactor code based on CI feedback.
+- Keep this README and the troubleshooting section live and up to date as you encounter and solve new issues.
+- Use PRs, issues, and CI feedback to drive improvements and document solutions.
+
+---
+
+## Project Structure Clarification
+
+- Both `customFixtures-data.spec.ts` and `useCustomFixtures-data.spec.ts` are present and demonstrate custom fixture usage.
+- All test, fixture, and config files referenced in this README exist in the repo and are actively used in the CI pipeline.
+
+---
+
+## Chapter 6: Advanced Patterns & Agentic Automation
+
+This chapter explores advanced test automation patterns and deeper agentic workflows. We will:
+
+- Introduce new design patterns (e.g., Factory/Builder for test data, Screenplay, API mocking, visual regression)
+- Expand the CI/CD pipeline with new jobs or checks as needed
+- Use agentic automation (Copilot, bots, scripts) to refactor, optimize, and document as we go
+- Keep this README live: every new pattern, troubleshooting step, or CI/CD enhancement is documented here in real time
+
+### Planned Topics
+- Factory/Builder pattern for complex test data
+- Screenplay pattern for actor-centric test design
+- API mocking and network interception
+- Visual regression testing with Playwright
+- Component testing (if applicable)
+- Global setup/teardown for session reuse
+- Environment-driven config and secrets management
+
+> As we implement each topic, the README will be updated with code examples, troubleshooting, and CI/CD integration notes.
