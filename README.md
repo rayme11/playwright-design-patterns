@@ -619,3 +619,29 @@ This chapter explores advanced test automation patterns and deeper agentic workf
 - Environment-driven config and secrets management
 
 > As we implement each topic, the README will be updated with code examples, troubleshooting, and CI/CD integration notes.
+
+### API Mocking & Network Interception (Chapter 6)
+
+Playwright's `page.route()` lets you intercept and mock network requests for fast, reliable, and isolated UI tests.
+
+**Common use cases:**
+- Mock successful or failed API responses
+- Simulate network errors or timeouts
+- Test UI behavior for edge cases without backend changes
+
+**Example:**
+```ts
+// Mock a successful login API response
+await page.route('**/authenticate', route =>
+  route.fulfill({ status: 200, body: JSON.stringify({ token: 'fake-token' }) })
+);
+```
+
+See `tests/api-mocking.spec.ts` for full examples:
+- Mocking login success and failure
+- Simulating network errors
+
+> Use API mocking to make your tests faster, more reliable, and independent of backend state.
+
+> **Note:**
+> The API mocking tests for the login page are expected to fail because the-internet.herokuapp.com uses a classic HTML form POST for login, not an XHR/fetch request. Playwright's `page.route()` only intercepts XHR/fetch, not navigation POSTs. As a result, the UI is replaced by the server's response and the route handler is never triggered. These tests are included for educational purposes to illustrate the limitation and to show how API mocking would work in a modern SPA or with XHR/fetch APIs.
