@@ -9,5 +9,5 @@
         "baseUrl": ".",
         "types": ["node"]
     },
-    "include": ["tests/**/*.ts", "features/**/*.ts"]
+    "include": ["tests/**/*.ts", "features/**/*.ts", "playwright.config.ts"]
 }
