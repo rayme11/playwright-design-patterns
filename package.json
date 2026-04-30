@@ -26,6 +26,8 @@
     "@typescript-eslint/eslint-plugin": "^8.59.1",
     "@typescript-eslint/parser": "^8.59.1",
     "eslint": "^10.2.1",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",    
+    "mv": "eslint.config.js eslint.config.mjs"
+
   }
 }
