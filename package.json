@@ -20,8 +20,12 @@
   "homepage": "https://github.com/rayme11/playwright-design-patterns#readme",
   "devDependencies": {
     "@cucumber/cucumber": "^12.7.0",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.59.1",
     "@types/node": "^25.5.2",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
+    "eslint": "^10.2.1",
     "ts-node": "^10.9.2"
   }
 }
