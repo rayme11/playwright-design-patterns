@@ -17,7 +17,7 @@ test('login with mocked API success (expected to fail)', async ({ page }) => {
     await expect(loginPage.flashSuccess).toBeVisible({ timeout: 3000 });
     // If it passes, fail the test (unexpected)
     throw new Error('Test unexpectedly passed: UI should not show success message with route mocking.');
-  } catch (err) {
+  } catch {
     // Expected to fail
     test.skip(true, 'Expected failure: form POST is not intercepted by Playwright route mocking.');
   }
@@ -35,7 +35,7 @@ test('login with mocked API failure (expected to fail)', async ({ page }) => {
   try {
     await expect(loginPage.flashError).toBeVisible({ timeout: 3000 });
     throw new Error('Test unexpectedly passed: UI should not show error message with route mocking.');
-  } catch (err) {
+  } catch {
     test.skip(true, 'Expected failure: form POST is not intercepted by Playwright route mocking.');
   }
 });
@@ -50,7 +50,7 @@ test('login with network error (expected to fail)', async ({ page }) => {
   try {
     await expect(loginPage.flashError).toBeVisible({ timeout: 3000 });
     throw new Error('Test unexpectedly passed: UI should not show error message with route mocking.');
-  } catch (err) {
+  } catch {
     test.skip(true, 'Expected failure: form POST is not intercepted by Playwright route mocking.');
   }
 });
