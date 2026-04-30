@@ -645,3 +645,25 @@ See `tests/api-mocking.spec.ts` for full examples:
 
 > **Note:**
 > The API mocking tests for the login page are expected to fail because the-internet.herokuapp.com uses a classic HTML form POST for login, not an XHR/fetch request. Playwright's `page.route()` only intercepts XHR/fetch, not navigation POSTs. As a result, the UI is replaced by the server's response and the route handler is never triggered. These tests are included for educational purposes to illustrate the limitation and to show how API mocking would work in a modern SPA or with XHR/fetch APIs.
+
+### Visual Regression Testing (Chapter 6)
+
+Playwright can catch unintended UI changes by comparing screenshots to baseline images.
+
+- Use `expect(page).toHaveScreenshot()` for full-page comparisons.
+- Use `expect(locator).toHaveScreenshot()` for element-level checks.
+- On first run, baseline images are created. On subsequent runs, Playwright will fail the test if the UI changes.
+
+**Example:**
+```ts
+test('login page visual regression', async ({ page }) => {
+  await page.goto('https://the-internet.herokuapp.com/login');
+  await expect(page).toHaveScreenshot('login-page.png', { fullPage: true });
+});
+```
+
+See `tests/visual-regression.spec.ts` for both full-page and element-level examples.
+
+> Visual regression is CI-friendly and helps catch layout, color, or font changes that functional tests might miss.
+
+---
