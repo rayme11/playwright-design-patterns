@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { LoginPage } from './pages/LoginPage';
+// import { test, expect } from '@playwright/test';
+// import { LoginPage } from './pages/LoginPage';
 
 // Visual regression: full page screenshot
 
