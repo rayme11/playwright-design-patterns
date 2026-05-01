@@ -17,6 +17,41 @@ A hands-on reference project demonstrating how to apply software design patterns
 - [Debugging](#debugging)
 - [Recommendations & Further Patterns](#recommendations--further-patterns)
 - [Troubleshooting & CI/CD Agentic Chapters](#troubleshooting--cd-agentic-chapters)
+- [Chapter 8: Visual Regression Testing](#chapter-8-visual-regression-testing)
+## Chapter 8: Visual Regression Testing
+
+This chapter introduces visual regression testing with Playwright. Visual regression tests catch unintended UI changes by comparing screenshots to baseline images.
+
+### Why Visual Regression?
+- Detects layout, color, or font changes that functional tests might miss
+- CI-friendly: fails the build if the UI changes unexpectedly
+- Easy to add to existing tests
+
+### How it works
+- On first run, Playwright creates baseline images
+- On subsequent runs, screenshots are compared to the baseline
+- If there are differences, the test fails and a diff image is generated
+
+### Example: Full Page Screenshot
+```ts
+test('login page visual regression', async ({ page }) => {
+  await page.goto('https://the-internet.herokuapp.com/login');
+  await expect(page).toHaveScreenshot('login-page.png', { fullPage: true });
+});
+```
+
+### Example: Element Screenshot
+```ts
+test('login form visual regression', async ({ page }) => {
+  await page.goto('https://the-internet.herokuapp.com/login');
+  const form = page.locator('form');
+  await expect(form).toHaveScreenshot('login-form.png');
+});
+```
+
+See `tests/visual-regression.spec.ts` for both full-page and element-level examples.
+
+---
 
 ---
 
@@ -37,25 +72,13 @@ Playwright is a Node.js library by Microsoft for automating web browsers (Chromi
 This project tests against [**The Internet**](https://the-internet.herokuapp.com) — a free, publicly hosted Heroku app built specifically for practising UI automation. It provides ready-made pages for common scenarios: login, checkboxes, dropdowns, drag-and-drop, file upload, alerts, iframes, and more.
 
 | Detail | Value |
-|---|---|
 | URL | https://the-internet.herokuapp.com |
 | Public demo credentials | `tomsmith` / `SuperSecretPassword!` (public demo-only credentials for this practice site) |
 | Hosting | Heroku free tier (may have cold-start delays) |
 
 > No account or setup required — just run the tests and they hit the live site.
->
-> Security note: these credentials are publicly available demo credentials for the external practice site and are included here only for convenience. They are not application secrets and should not be treated as an example for documenting production credentials.
-> No account or setup required — just run the tests and they hit the live site.
-
 ---
 
-## Project Structure
-
-```
-playwright-design-patterns/
-│
-├── tests/
-│   ├── no-fixtures.spec.ts            # Raw test, no fixture (anti-pattern demo)
 │   ├── with-fixtures.spec.ts          # Built-in Playwright fixtures
 │   ├── customFixtures-data.spec.ts    # Custom fixture definition
 │   ├── useCustomFixtures-data.spec.ts # Test consuming custom fixtures
@@ -89,7 +112,6 @@ playwright-design-patterns/
 ---
 
 ## Architecture Overview
-
 ```mermaid
 flowchart TD
     subgraph Runners["Test Runners"]
@@ -97,19 +119,11 @@ flowchart TD
         CK["🥒 Cucumber-JS\nBDD\n.feature + Step Defs"]
     end
 
-    subgraph Patterns["Design Patterns Layer"]
-        FX["🔧 Fixtures\ncustomData.ts\nsetup · teardown"]
-        POM["📄 Page Object Model\nLoginPage.ts\nselectors · actions"]
-    end
 
     subgraph Core["Playwright Core API"]
         API["⚙️ page.goto()\npage.fill()\nexpect()"]
     end
 
-    subgraph Browsers["Browsers"]
-        CR["🟢 Chromium"]
-        FF["🟠 Firefox"]
-        WK["⚪ WebKit"]
     end
 
     APP["🌐 App Under Test\nthe-internet.herokuapp.com"]
@@ -126,7 +140,6 @@ flowchart TD
     FF --> APP
     WK --> APP
 ```
-
 ---
 
 ## Design Patterns Covered
@@ -487,19 +500,8 @@ test('API health check then UI login', async ({ page, request }) => {
 ---
 
 ### Additional Patterns to Explore
-
-| Pattern | Description |
-|---|---|
-| **Factory / Builder** | Create complex test data objects with a fluent builder instead of raw literals |
-| **Screenplay** | Actor-centric pattern: actors have abilities (browse web), perform tasks (log in), ask questions (is visible?) |
-| **API Mocking** | Use `page.route()` to intercept and stub network calls — test UI independently of back-end |
-| **Visual Regression** | `expect(page).toHaveScreenshot()` — catch unintended UI changes automatically |
-| **Component Testing** | Playwright supports mounting React/Vue/Svelte components in isolation |
-| **Global Setup/Teardown** | Use `globalSetup` in `playwright.config.ts` to authenticate once and reuse session state across all tests |
-| **Environment Config** | Drive `baseURL`, credentials, and browser choice from `.env` files using `dotenv` |
-
+ - [Chapter 7: Screenplay Pattern (Actor-Centric Testing)](#chapter-7-screenplay-pattern-actor-centric-testing)
 ---
-
 ### Recommended Project Conventions
 
 - Keep one POM class per page/component
@@ -515,7 +517,6 @@ test('API health check then UI login', async ({ page, request }) => {
 ### Common Issues & How to Fix
 
 | Symptom | Possible Cause | How to Fix |
-|---|---|---|
 | Lint errors (e.g. `no-empty-pattern`, `not defined`) | ESLint/TypeScript config mismatch, Playwright fixture destructuring | See `.eslintrc.json` for rules. For Playwright fixtures, use `async ({}, use)` and add `// eslint-disable-next-line no-empty-pattern` above the line. Run `npx eslint . --ext .ts --format unix` locally before pushing. |
 | `process is not defined` in config | Missing import | Add `import process from 'process';` to `playwright.config.ts`. |
 | `defineConfig` or `devices` not defined | Missing import | Add `import { defineConfig, devices } from '@playwright/test';` to `playwright.config.ts`. |
@@ -531,7 +532,6 @@ This project is designed for agentic, step-by-step learning and real-world CI/CD
 - **Chapter 1:** Baseline tests, no patterns (manual, anti-pattern)
 - **Chapter 2:** Fixtures, POM, data-driven, API, custom patterns
 - **Chapter 3:** BDD with Cucumber, step definitions, hooks
-- **Chapter 4:** CI/CD with GitHub Actions, linting, security scan, Playwright in CI
 - **Chapter 5+:** Agentic workflows — let an agent (e.g. GitHub Copilot, custom bot) fix lint errors, update config, or refactor code. Use PRs, issues, and CI feedback to drive improvements. Keep the agenda live: always address CI failures, lint errors, and code review feedback as they arise.
 
 #### How to Go Agentic
@@ -546,7 +546,6 @@ This project is designed for agentic, step-by-step learning and real-world CI/CD
 ## CI/CD Pipeline (Chapter 5+)
 
 This project uses GitHub Actions for continuous integration. On every push or pull request, the following jobs run:
-
 - **Test:** Runs all Playwright tests headlessly and uploads the HTML report as an artifact.
 - **Lint:** Runs ESLint on all TypeScript files using the command:
   ```bash
@@ -559,8 +558,19 @@ See `.github/workflows/ci.yml` for details.
 
 ---
 
-## NPM Scripts
 
+### 5. Screenplay Pattern (Chapter 7)
+
+**What:** The Screenplay Pattern models tests around "actors" who perform "tasks" and ask "questions" about the system, making tests more expressive, maintainable, and reusable.
+
+**Why:** Encourages composition, reuse, and clear separation of concerns. Popular in advanced test automation frameworks.
+
+```
+tests/screenplay/screenplay.ts         ← core abstractions (Actor, Task, Question)
+tests/screenplay/login.screenplay.spec.ts  ← example screenplay test
+```
+
+**TDD angle:** Write the actor/task/question abstractions first, then compose tests from these building blocks.
 - `npm run test:playwright` — Run all Playwright specs (recommended for CI and local dev)
 - `npm run test:cucumber` — Run all BDD/Cucumber specs
 
@@ -609,16 +619,20 @@ This chapter explores advanced test automation patterns and deeper agentic workf
 - Use agentic automation (Copilot, bots, scripts) to refactor, optimize, and document as we go
 - Keep this README live: every new pattern, troubleshooting step, or CI/CD enhancement is documented here in real time
 
-### Planned Topics
-- Factory/Builder pattern for complex test data
-- Screenplay pattern for actor-centric test design
-- API mocking and network interception
-- Visual regression testing with Playwright
-- Component testing (if applicable)
-- Global setup/teardown for session reuse
-- Environment-driven config and secrets management
 
-> As we implement each topic, the README will be updated with code examples, troubleshooting, and CI/CD integration notes.
+---
+
+## Agentic Agenda (Live)
+
+- [x] Factory/Builder pattern for complex test data
+- [x] Screenplay pattern for actor-centric test design
+- [x] API mocking and network interception
+- [ ] Visual regression testing with Playwright (current)
+- [ ] Component testing (if applicable)
+- [ ] Global setup/teardown for session reuse
+- [ ] Environment-driven config and secrets management
+
+> As we implement each topic, this README is updated with code examples, troubleshooting, and CI/CD integration notes.
 
 ### API Mocking & Network Interception (Chapter 6)
 
