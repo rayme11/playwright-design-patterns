@@ -16,7 +16,12 @@ export default [
       '@typescript-eslint': ts,
     },
     rules: {
-      // Add or override rules here
+      // Allow unused variables if they start with _ (for parameters)
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { 'argsIgnorePattern': '^_' }
+      ],
+      'no-unused-vars': 'warn',
     },
   },
 ];
