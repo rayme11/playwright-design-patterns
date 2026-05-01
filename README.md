@@ -18,6 +18,109 @@ A hands-on reference project demonstrating how to apply software design patterns
 - [Recommendations & Further Patterns](#recommendations--further-patterns)
 - [Troubleshooting & CI/CD Agentic Chapters](#troubleshooting--cd-agentic-chapters)
 - [Chapter 8: Visual Regression Testing](#chapter-8-visual-regression-testing)
+- [Chapter 9: Global Setup/Teardown](#chapter-9-global-setupteardown)
+## Chapter 9: Global Setup/Teardown
+
+
+This chapter demonstrates how to use Playwright's global setup and teardown features to share state (like authentication) and speed up your test runs.
+
+### What is global setup/teardown?
+- **Global setup** runs once before all tests. Use it to log in, seed data, or set up environment state. You can save authentication state to a file for reuse.
+- **Global teardown** runs once after all tests. Use it to clean up test data or resources.
+
+### Why use it?
+- Avoids repeating expensive setup in every test
+- Enables cross-test state sharing (e.g., logged-in cookies or tokens)
+- Ensures a clean environment before/after the test suite
+
+### How to use in Playwright
+1. Create `global-setup.ts` and/or `global-teardown.ts` in your project root.
+2. Reference them in `playwright.config.ts`:
+   ```ts
+   import { defineConfig } from '@playwright/test';
+   export default defineConfig({
+     globalSetup: require.resolve('./global-setup'),
+     globalTeardown: require.resolve('./global-teardown'),
+     // ...other config
+   });
+   ```
+3. In `global-setup.ts`, you can log in and save storage state:
+   ```ts
+   import { chromium } from '@playwright/test';
+
+   async function globalSetup() {
+     const browser = await chromium.launch();
+     const page = await browser.newPage();
+     await page.goto('https://the-internet.herokuapp.com/login');
+     await page.fill('input[name="username"]', 'tomsmith');
+     await page.fill('input[name="password"]', 'SuperSecretPassword!');
+     await page.click('button[type="submit"]');
+     await page.context().storageState({ path: 'storageState.json' });
+     await browser.close();
+   }
+
+   export default globalSetup;
+   ```
+4. In your tests, load the storage state:
+   ```ts
+   test.use({ storageState: 'storageState.json' });
+   ```
+
+#### ⚠️ Limitation: Herokuapp and Server-Side Sessions
+
+> **Note:** The Herokuapp demo site uses classic server-side session cookies (`rack.session`). These sessions are often bound to the browser instance or IP and are not portable across browser contexts. As a result, Playwright's global setup with `storageState.json` will **not** preserve login state for this app, even though the session cookie is present. This is a limitation of the demo app, not Playwright.
+
+> **What to expect:**
+> - The test `tests/global-setup-login.spec.ts` is skipped and includes a comment explaining this limitation.
+> - This pattern works as expected for modern apps using JWT/localStorage/sessionStorage for authentication.
+
+---
+
+### ✅ Example: Global Setup with localStorage (Portable Auth)
+
+To demonstrate a portable and reliable pattern, see the new example using localStorage:
+
+1. `global-setup-local.ts` sets a fake auth token and user in localStorage and saves the state to `storageState.local.json`.
+2. `tests/global-setup-local.spec.ts` loads this state and verifies the values are present.
+
+```ts
+// global-setup-local.ts
+import { chromium } from '@playwright/test';
+
+async function globalSetup() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await page.goto('about:blank');
+  await page.evaluate(() => {
+    localStorage.setItem('auth_token', 'demo-token-123');
+    localStorage.setItem('user', JSON.stringify({ name: 'Demo User', role: 'admin' }));
+  });
+  await page.context().storageState({ path: 'storageState.local.json' });
+  await browser.close();
+}
+export default globalSetup;
+```
+
+```ts
+// tests/global-setup-local.spec.ts
+import { test, expect } from '@playwright/test';
+
+test.use({ storageState: 'storageState.local.json' });
+
+test('should reuse localStorage auth state', async ({ page }) => {
+  await page.goto('about:blank');
+  const authToken = await page.evaluate(() => localStorage.getItem('auth_token'));
+  const user = await page.evaluate(() => localStorage.getItem('user'));
+  expect(authToken).toBe('demo-token-123');
+  expect(user).toBe(JSON.stringify({ name: 'Demo User', role: 'admin' }));
+});
+```
+
+> This pattern works for any app that uses localStorage/sessionStorage for authentication (e.g., JWT, SPA, React/Angular/Vue apps, etc.).
+
+---
+
+---
 ## Chapter 8: Visual Regression Testing
 
 This chapter introduces visual regression testing with Playwright. Visual regression tests catch unintended UI changes by comparing screenshots to baseline images.
