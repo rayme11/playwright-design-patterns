@@ -24,41 +24,11 @@ In a real-world setup:
 
 ### Architecture Diagram
 
-```mermaid
-flowchart TD
-      subgraph JIRA["Jira Cloud"]
-         J1[User Stories & Acceptance Criteria]
-         J2[Test Management (Xray/Zephyr)]
-      end
 
-      subgraph AGENTIC["Agentic AI / MCP Server"]
-         A1[Fetches Jira Stories]
-         A2[Generates/Updates Playwright Tests]
-         A3[Analyzes Test Failures]
-         A4[Links Results Back to Jira]
-      end
+<!-- Architecture Diagram: Rendered image for GitHub compatibility -->
+![Agentic Architecture](docs/pics/agentic-architecture.png)
 
-      subgraph CODE["Codebase (GitHub)"]
-         C1[Playwright Test Code]
-         C2[Pull Requests]
-      end
-
-      subgraph CI["CI Pipeline (GitHub Actions)"]
-         CI1[Runs Playwright Tests]
-         CI2[Publishes Reports]
-      end
-
-      J1 -- REST API --> A1
-      J2 -- REST API --> A1
-      A2 -- Commits/PRs --> C1
-      C1 -- Triggers --> CI1
-      CI1 -- Results/Artifacts --> CI2
-      CI2 -- Status/Reports --> A3
-      A3 -- Updates --> A4
-      A4 -- REST API --> J2
-      CI2 -- Links/Status --> C2
-      C2 -- Traceability --> J1
-```
+> To update this diagram: Edit the Mermaid code in this file, render it using the Mermaid Live Editor or VS Code extension, export as PNG, and replace docs/pics/agentic-architecture.png.
 
 ---
 
