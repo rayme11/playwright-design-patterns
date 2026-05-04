@@ -1,0 +1,10 @@
+{
+  "key": "LOGIN-123",
+  "summary": "User can log in with valid credentials",
+  "description": "As a registered user, I want to log in so that I can access my account.",
+  "acceptanceCriteria": [
+    "AC1: Given I am on the login page, when I enter valid credentials and submit, then I should see the secure area.",
+    "AC2: Given I am on the login page, when I enter invalid credentials and submit, then I should see an error message."
+  ],
+  "testCaseLink": "TEST-456"
+}
