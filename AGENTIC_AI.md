@@ -32,11 +32,61 @@ In a real-world setup:
 
 ---
 
+### Step 4: Link Test Results Back to Jira
+
+After tests run, the agent posts a structured comment back to the Jira story for full traceability.
+
+**Script:** `agentic-ai/report-results-to-jira.js`
+
+**How it works:**
+1. Reads `agentic-ai/test-results/generated-login.json` (Playwright JSON reporter output).
+2. Builds a human-readable Jira comment with pass/fail status for each acceptance criterion.
+3. In dry-run mode (no credentials), prints the comment to the terminal.
+4. When `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` env vars are set, POSTs the comment to the real Jira issue via REST API.
+
+**Run it:**
+```bash
+# Dry-run (no credentials needed):
+node agentic-ai/report-results-to-jira.js
+
+# Real Jira (with credentials):
+JIRA_BASE_URL=https://yourcompany.atlassian.net \
+JIRA_EMAIL=your@email.com \
+JIRA_API_TOKEN=your_token \
+node agentic-ai/report-results-to-jira.js
+```
+
+**Example Jira comment output:**
+```
+🤖 Agentic AI Test Report — LOGIN-123
+
+Overall: ✅ PASSED
+Run Date: 2026-05-04 19:05:44 UTC
+Duration: 4.48s
+Tests: 2 passed, 0 failed
+
+Results:
+  ✅ AC1: Given I am on the login page, when I enter valid credentials and submit, then I should see the secure area (1353ms)
+  ✅ AC2: Given I am on the login page, when I enter invalid credentials and submit, then I should see an error message (347ms)
+
+Generated automatically by the agentic CI workflow.
+```
+
+**To generate results for the reporter:**
+```bash
+PLAYWRIGHT_JSON_OUTPUT_NAME=agentic-ai/test-results/generated-login.json \
+npx playwright test tests/ai-generated/generated-login.spec.ts --reporter=json
+```
+
+---
+
 ### Next Steps
-1. Demonstrate linking test results back to Jira (mock or real API call).
-2. Show traceability in both code and Jira.
-3. Expand to more complex scenarios (multiple stories, test management plugins, etc.).
-4. Continue updating this document as the workflow evolves.
+- [x] Step 1: Simulate a Jira user story and acceptance criteria
+- [x] Step 2: Generate a Playwright test from acceptance criteria
+- [x] Step 3: Simulate a test failure and agentic fix
+- [x] Step 4: Link results back to Jira (dry-run + real API)
+- [ ] Step 5: Self-healing test — agent detects flakiness and auto-retries or fixes
+- [ ] Step 6: Expand to multiple stories and full CI pipeline integration
 
 ---
 #### Agentic Analysis and Fix Example
