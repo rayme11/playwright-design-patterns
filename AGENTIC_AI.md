@@ -39,7 +39,7 @@ After tests run, the agent posts a structured comment back to the Jira story for
 **Script:** `agentic-ai/report-results-to-jira.js`
 
 **How it works:**
-1. Reads `agentic-ai/test-results/generated-login.json` (Playwright JSON reporter output).
+1. Reads `tests/ai-generated/test-results/generated-login.json` (Playwright JSON reporter output).
 2. Builds a human-readable Jira comment with pass/fail status for each acceptance criterion.
 3. In dry-run mode (no credentials), prints the comment to the terminal.
 4. When `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` env vars are set, POSTs the comment to the real Jira issue via REST API.
@@ -74,7 +74,7 @@ Generated automatically by the agentic CI workflow.
 
 **To generate results for the reporter:**
 ```bash
-PLAYWRIGHT_JSON_OUTPUT_NAME=agentic-ai/test-results/generated-login.json \
+PLAYWRIGHT_JSON_OUTPUT_NAME=tests/ai-generated/test-results/generated-login.json \
 npx playwright test tests/ai-generated/generated-login.spec.ts --reporter=json
 ```
 

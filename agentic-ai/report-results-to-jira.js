@@ -12,7 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const RESULTS_FILE = path.join(__dirname, 'test-results', 'generated-login.json');
+const RESULTS_FILE = path.join(__dirname, '../tests/ai-generated/test-results', 'generated-login.json');
 const JIRA_KEY = 'LOGIN-123'; // derived from the story file; could be dynamic
 
 // ─── Load results ───────────────────────────────────────────────────────────
