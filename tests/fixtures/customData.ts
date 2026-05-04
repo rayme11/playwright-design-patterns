@@ -6,7 +6,8 @@ type CustomFixtures = {
 
 const test = base.extend<CustomFixtures>({
     // Define a custom fixture named "customData"
-    customData: async ({ }, use) => {
+    // eslint-disable-next-line no-empty-pattern
+    customData: async ({}, use) => {
         // You can perform any setup here, such as fetching data from an API or reading from a file
         // data sample was taken from https://the-internet.herokuapp.com/login
         const badData = {

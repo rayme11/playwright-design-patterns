@@ -25,7 +25,7 @@ export type LoginDataFixture = {
  * Swap the JSON file for an API call or DB query here without touching tests.
  */
 const test = base.extend<{ loginDataFixture: LoginDataFixture }>({
-    loginDataFixture: async ({}, use) => {
+    loginDataFixture: async (_unused, use) => {
         await use(loginData);
     }
 });
