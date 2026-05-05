@@ -15,8 +15,10 @@ async function globalSetup() {
   await page.context().storageState({ path: 'storageState.json' });
 
   // --- localStorage auth state (SPA/JWT demo) ---
+  // Note: localStorage is origin-scoped; about:blank is blocked on Linux/CI.
+  // Use the same real origin that the test will navigate to.
   const localPage = await browser.newPage();
-  await localPage.goto('about:blank');
+  await localPage.goto('https://the-internet.herokuapp.com');
   await localPage.evaluate(() => {
     localStorage.setItem('auth_token', 'demo-token-123');
     localStorage.setItem('user', JSON.stringify({ name: 'Demo User', role: 'admin' }));
