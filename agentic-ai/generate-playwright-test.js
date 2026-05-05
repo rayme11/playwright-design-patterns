@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const storyPath = path.join(__dirname, 'jira-story.LOGIN-123.json');
+const storyPath = path.join(__dirname, 'data/jira-story.LOGIN-123.json');
 const outputTestPath = path.join(__dirname, '../tests/ai-generated/generated-login.spec.ts');
 
 function generateTest({ key, summary, description, acceptanceCriteria, testCaseLink }) {

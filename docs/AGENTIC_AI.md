@@ -183,7 +183,7 @@ The following steps will demonstrate how to:
 
 We use a mock Jira user story file in JSON format:
 
-**File:** `agentic-ai/jira-story.LOGIN-123.json`
+**File:** `agentic-ai/data/jira-story.LOGIN-123.json`
 
 ```json
 {

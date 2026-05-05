@@ -40,6 +40,47 @@ jobs:
           name: playwright-report
           path: playwright-report
 
+  agentic-ai:
+    name: Agentic AI — Generate → Test → Self-Heal → Report to Jira
+    runs-on: ubuntu-22.04
+    env:
+      JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+      JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+      JIRA_ISSUE_KEY: ${{ secrets.JIRA_ISSUE_KEY }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Step 2 — Generate Playwright test from Jira story
+        run: node agentic-ai/generate-playwright-test.js
+
+      - name: Step 3 — Run generated tests + capture JSON results
+        run: |
+          PLAYWRIGHT_JSON_OUTPUT_NAME=tests/ai-generated/test-results/generated-login.json \
+          npx playwright test tests/ai-generated/generated-login.spec.ts --reporter=json || true
+
+      - name: Step 5 — Self-healing agent (detect failure → inspect DOM → patch → rerun)
+        run: node agentic-ai/self-heal.js
+
+      - name: Upload generated test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agentic-ai-test-results
+          path: tests/ai-generated/test-results/
+
   lint:
     runs-on: ubuntu-22.04
     steps:
