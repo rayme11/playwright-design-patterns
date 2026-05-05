@@ -28,5 +28,8 @@
     "eslint": "^10.2.1",
     "eslint-formatter-unix": "^9.0.1",
     "ts-node": "^10.9.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2"
   }
 }

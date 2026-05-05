@@ -11,9 +11,10 @@
 
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const RESULTS_FILE = path.join(__dirname, '../tests/ai-generated/test-results', 'generated-login.json');
-const JIRA_KEY = 'LOGIN-123'; // derived from the story file; could be dynamic
+const JIRA_KEY = process.env.JIRA_ISSUE_KEY || 'SCRUM-1'; // override with JIRA_ISSUE_KEY env var
 
 // ─── Load results ───────────────────────────────────────────────────────────
 const results = JSON.parse(fs.readFileSync(RESULTS_FILE, 'utf-8'));
@@ -75,7 +76,8 @@ const { JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN } = process.env;
 
 if (JIRA_BASE_URL && JIRA_EMAIL && JIRA_API_TOKEN) {
   const auth = Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString('base64');
-  const url = `${JIRA_BASE_URL}/rest/api/3/issue/${JIRA_KEY}/comment`;
+  const baseUrl = JIRA_BASE_URL.replace(/\/$/, ''); // strip trailing slash
+  const url = `${baseUrl}/rest/api/3/issue/${JIRA_KEY}/comment`;
 
   fetch(url, {
     method: 'POST',
