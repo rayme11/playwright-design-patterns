@@ -19,6 +19,7 @@ A hands-on reference project demonstrating how to apply software design patterns
 - [Troubleshooting & CI/CD Agentic Chapters](#troubleshooting--cd-agentic-chapters)
 - [Chapter 8: Visual Regression Testing](#chapter-8-visual-regression-testing)
 - [Chapter 9: Global Setup/Teardown](#chapter-9-global-setupteardown)
+- [Chapter 10: Agentic AI Testing](#chapter-10-agentic-ai-testing)
 ## Chapter 9: Global Setup/Teardown
 
 
@@ -120,6 +121,100 @@ test('should reuse localStorage auth state', async ({ page }) => {
 
 ---
 
+## Chapter 10: Agentic AI Testing
+
+This chapter introduces a fully agentic test automation workflow — an AI-driven loop that reads requirements from Jira, generates Playwright tests, runs them, self-heals failures, and reports results back to Jira automatically.
+
+### Architecture
+
+![Agentic AI Architecture](docs/pics/agentic-architecture.png)
+
+```
+Jira Story (AC) → generate-playwright-test.js → generated-login.spec.ts
+                                                        ↓  (Playwright runs it)
+                                              test-results/generated-login.json
+                                                        ↓
+                                    self-heal.js (detect failure → inspect DOM → patch → rerun)
+                                                        ↓
+                                    report-results-to-jira.js → SCRUM-1 on Jira
+```
+
+### Steps Implemented
+
+| Step | Script | What it does |
+|------|--------|-------------|
+| 1 | `agentic-ai/data/jira-story.LOGIN-123.json` | Input: mock Jira story with acceptance criteria |
+| 2 | `agentic-ai/generate-playwright-test.js` | Reads AC, generates `tests/ai-generated/generated-login.spec.ts` |
+| 3 | Playwright JSON reporter | Runs tests, writes results to `tests/ai-generated/test-results/generated-login.json` |
+| 4 | `agentic-ai/report-results-to-jira.js` | Parses JSON results, POSTs structured comment to real Jira issue |
+| 5 | `agentic-ai/self-heal.js` | Detects broken selector → launches headless browser → inspects DOM → patches test file → reruns → reports fix to Jira |
+
+### Running the Agentic Workflow
+
+**Prerequisites:** Copy `.env.example` to `.env` and fill in your Jira credentials:
+```bash
+cp .env.example .env
+# Edit .env with your values:
+# JIRA_BASE_URL=https://yourcompany.atlassian.net
+# JIRA_EMAIL=your.email@company.com
+# JIRA_API_TOKEN=your_api_token   ← https://id.atlassian.com/manage-profile/security/api-tokens
+# JIRA_ISSUE_KEY=SCRUM-1
+```
+
+**Step 2 — Generate test from Jira story:**
+```bash
+node agentic-ai/generate-playwright-test.js
+```
+
+**Step 3 — Run generated tests:**
+```bash
+PLAYWRIGHT_JSON_OUTPUT_NAME=tests/ai-generated/test-results/generated-login.json \
+npx playwright test tests/ai-generated/generated-login.spec.ts --reporter=json
+```
+
+**Step 4 — Report results to Jira:**
+```bash
+node agentic-ai/report-results-to-jira.js
+```
+
+**Step 5 — Full self-healing loop (detects failure, fixes selector, reruns, reports):**
+```bash
+node agentic-ai/self-heal.js
+```
+
+### How Self-Healing Works
+
+1. Runs the Playwright test suite
+2. If a test fails, extracts the broken selector from Playwright's error message
+3. Launches a headless browser, navigates to the page, and queries all `[class*="flash"]` / `[class*="alert"]` elements
+4. Ranks candidates — prefers elements whose CSS classes contain `"success"` explicitly
+5. Patches the test file in-place with the correct selector
+6. Reruns the suite to confirm green
+7. Posts a self-heal report to the Jira issue with before/after selectors and final test results
+
+### CI Integration (Step 6 — in progress)
+
+The `agentic-ai` job in `.github/workflows/ci.yml` runs the full loop on every push:
+- Generates the test from the Jira story
+- Runs the generated tests
+- Invokes the self-healing agent if needed
+- Uploads test results as a CI artifact
+- Jira credentials are stored as GitHub Actions secrets (`JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_ISSUE_KEY`)
+
+### Chapter 10 Progress
+
+- [x] Step 1: Mock Jira story as AI input (`agentic-ai/data/jira-story.LOGIN-123.json`)
+- [x] Step 2: Generate Playwright test from acceptance criteria
+- [x] Step 3: Run tests + capture JSON results
+- [x] Step 4: Report results to real Jira (SCRUM-1 on `ray-maldonado.atlassian.net`)
+- [x] Step 5: Self-healing agent — detects broken selector, inspects DOM, patches file, reruns, posts fix to Jira
+- [ ] Step 6: Full CI pipeline — GitHub Actions secrets + trigger
+- [ ] Step 7: Real MCP server — expose tools to VS Code Copilot agent mode
+
+> See [docs/AGENTIC_AI.md](docs/AGENTIC_AI.md) for the full deep-dive documentation.
+
+---
+
 ---
 ## Chapter 8: Visual Regression Testing
 
@@ -182,11 +277,33 @@ This project tests against [**The Internet**](https://the-internet.herokuapp.com
 > No account or setup required — just run the tests and they hit the live site.
 ---
 
+```
+playwright-design-patterns/
+│
+├── setup/                             # Global setup/teardown (Chapter 9)
+│   ├── global-setup.ts                # Saves auth state via storageState.json
+│   └── global-setup-local.ts          # localStorage-based portable auth demo
+│
+├── agentic-ai/                        # Agentic AI workflow scripts (Chapter 10)
+│   ├── data/
+│   │   └── jira-story.LOGIN-123.json  # Mock Jira user story (AC input)
+│   ├── generate-playwright-test.js    # Step 2: generate test from Jira story
+│   ├── self-heal.js                   # Step 5: detect failure → inspect DOM → patch → rerun
+│   ├── report-results-to-jira.js      # Step 4: post test results to real Jira issue
+│   └── render-diagram.js              # Renders architecture diagram to PNG
+│
+├── tests/
+│   ├── ai-generated/                  # AI-generated tests + results (Chapter 10)
+│   │   ├── generated-login.spec.ts    # Test generated from Jira acceptance criteria
+│   │   └── test-results/
+│   │       └── generated-login.json   # JSON reporter output consumed by Jira reporter
+│   │
 │   ├── with-fixtures.spec.ts          # Built-in Playwright fixtures
 │   ├── customFixtures-data.spec.ts    # Custom fixture definition
 │   ├── useCustomFixtures-data.spec.ts # Test consuming custom fixtures
 │   ├── data-driven-login.spec.ts      # ★ Data-driven tests loaded from JSON
 │   ├── api-login.spec.ts              # ★ API tests + API+UI hybrid pattern
+│   ├── visual-regression.spec.ts      # ★ Visual regression (Chapter 8)
 │   ├── example.spec.ts                # Basic sanity test
 │   │
 │   ├── data/
@@ -196,8 +313,15 @@ This project tests against [**The Internet**](https://the-internet.herokuapp.com
 │   │   ├── customData.ts              # Inline fixture: hardcoded test data
 │   │   └── loginDataFixture.ts        # ★ Fixture that loads from JSON data file
 │   │
-│   └── pages/
-│       └── LoginPage.ts               # Page Object Model for the Login page
+│   ├── factories/
+│   │   └── userFactory.ts             # Factory pattern for test data
+│   │
+│   ├── pages/
+│   │   └── LoginPage.ts               # Page Object Model for the Login page
+│   │
+│   └── screenplay/
+│       ├── screenplay.ts              # Actor/Task/Question abstractions
+│       └── login.screenplay.spec.ts   # Screenplay pattern test
 │
 ├── features/                          # Cucumber BDD specs (Chapter 3)
 │   ├── login.feature                  # Gherkin scenarios
@@ -206,8 +330,17 @@ This project tests against [**The Internet**](https://the-internet.herokuapp.com
 │       ├── world.ts                   # Shared test context (browser, page)
 │       └── hooks.ts                   # Before/After hooks (browser lifecycle)
 │
+├── docs/                              # Documentation and diagrams
+│   ├── AGENTIC_AI.md                  # Chapter 10 deep-dive documentation
+│   └── pics/
+│       └── agentic-architecture.png   # Architecture diagram
+│
+├── .github/workflows/
+│   └── ci.yml                         # CI: test + lint + security + agentic-ai jobs
+│
+├── .env.example                       # Safe credential template (copy to .env)
 ├── playwright.config.ts               # Playwright configuration
-├── cucumber.json                      # Cucumber configuration
+├── eslint.config.mjs                  # ESLint configuration
 ├── tsconfig.json                      # TypeScript configuration
 └── package.json
 ```
@@ -620,7 +753,7 @@ test('API health check then UI login', async ({ page, request }) => {
 ### Common Issues & How to Fix
 
 | Symptom | Possible Cause | How to Fix |
-| Lint errors (e.g. `no-empty-pattern`, `not defined`) | ESLint/TypeScript config mismatch, Playwright fixture destructuring | See `.eslintrc.json` for rules. For Playwright fixtures, use `async ({}, use)` and add `// eslint-disable-next-line no-empty-pattern` above the line. Run `npx eslint . --ext .ts --format unix` locally before pushing. |
+| Lint errors (e.g. `no-empty-pattern`, `not defined`) | ESLint/TypeScript config mismatch, Playwright fixture destructuring | See `eslint.config.mjs` for rules. For Playwright fixtures, use `async ({}, use)` and add `// eslint-disable-next-line no-empty-pattern` above the line. Run `npx eslint . --ext .ts --format unix` locally before pushing. |
 | `process is not defined` in config | Missing import | Add `import process from 'process';` to `playwright.config.ts`. |
 | `defineConfig` or `devices` not defined | Missing import | Add `import { defineConfig, devices } from '@playwright/test';` to `playwright.config.ts`. |
 | Tests fail on CI but pass locally | Environment differences, missing dependencies | Ensure Node.js version matches (`node -v`). Run `npm ci` and `npx playwright install` locally. |
@@ -730,10 +863,13 @@ This chapter explores advanced test automation patterns and deeper agentic workf
 - [x] Factory/Builder pattern for complex test data
 - [x] Screenplay pattern for actor-centric test design
 - [x] API mocking and network interception
-- [ ] Visual regression testing with Playwright (current)
-- [ ] Component testing (if applicable)
-- [ ] Global setup/teardown for session reuse
-- [ ] Environment-driven config and secrets management
+- [x] Visual regression testing with Playwright (Chapter 8)
+- [x] Global setup/teardown for session reuse (Chapter 9)
+- [x] Agentic AI: generate tests from Jira stories (Chapter 10)
+- [x] Agentic AI: self-healing selector repair (Chapter 10)
+- [x] Real Jira API integration — post test results as comments
+- [ ] CI pipeline: agentic-ai job with GitHub Actions secrets (Step 6)
+- [ ] MCP server: expose tools to VS Code Copilot agent mode (Step 7)
 
 > As we implement each topic, this README is updated with code examples, troubleshooting, and CI/CD integration notes.
 
