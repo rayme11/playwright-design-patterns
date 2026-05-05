@@ -32,7 +32,7 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run Playwright tests (all specs except ai-generated)
-        run: npx playwright test --reporter=list,html
+        run: CI_EXCLUDE_AGENTIC=1 npx playwright test --reporter=list,html
 
       - name: Upload Playwright HTML report
         uses: actions/upload-artifact@v4

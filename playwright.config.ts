@@ -15,8 +15,9 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
  */
 export default defineConfig({
   testDir: './tests',
-  // ai-generated tests are managed by the agentic-ai CI job (self-heal loop), not the main test suite
-  testIgnore: ['**/ai-generated/**'],
+  // ai-generated tests are managed by the agentic-ai CI job (self-heal loop).
+  // The main test job sets CI_EXCLUDE_AGENTIC=1 to skip them; self-heal does not.
+  testIgnore: process.env.CI_EXCLUDE_AGENTIC ? ['**/ai-generated/**'] : [],
   globalSetup: require.resolve('./setup/global-setup'),
   /* Run tests in files in parallel */
   fullyParallel: true,
