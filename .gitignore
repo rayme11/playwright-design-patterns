@@ -10,3 +10,13 @@ node_modules/
 # Environment variables — never commit real credentials
 .env
 .env.local
+
+# Auth state — regenerates on every test run
+storageState.json
+
+# BDD / Cucumber build artifacts
+cucumber-report.html
+cucumber.json
+
+# Python cache (not used in this project)
+.pytest_cache/
