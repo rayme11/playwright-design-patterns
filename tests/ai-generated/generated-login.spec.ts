@@ -18,7 +18,7 @@ test.describe('[Jira: LOGIN-123] User can log in with valid credentials', () => 
       await page.fill('#password', 'SuperSecretPassword!');
       await page.click('button[type=submit]');
       await expect(page).toHaveURL(/secure/);
-    // Intentionally broken selector to simulate failure:
+    // Intentionally broken selector — self-healing agent will detect and fix this:
     await expect(page.locator('.flash.success')).toBeVisible();
   });
 
