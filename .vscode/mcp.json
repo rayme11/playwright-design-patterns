@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "playwright-agentic": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/agentic-ai/mcp-server.js"],
+      "env": {}
+    }
+  }
+}

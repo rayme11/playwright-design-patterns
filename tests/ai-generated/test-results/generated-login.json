@@ -4,7 +4,7 @@
     "rootDir": "/Users/raymaldonado/Library/CloudStorage/GoogleDrive-vivachihuahua2004@gmail.com/My Drive/Code/playwright-design-patterns/tests",
     "forbidOnly": false,
     "fullyParallel": true,
-    "globalSetup": "/Users/raymaldonado/Library/CloudStorage/GoogleDrive-vivachihuahua2004@gmail.com/My Drive/Code/playwright-design-patterns/global-setup.ts",
+    "globalSetup": "/Users/raymaldonado/Library/CloudStorage/GoogleDrive-vivachihuahua2004@gmail.com/My Drive/Code/playwright-design-patterns/setup/global-setup.ts",
     "globalTeardown": null,
     "globalTimeout": 0,
     "grep": {},
@@ -80,12 +80,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1327,
+                      "duration": 1395,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-05T17:00:10.599Z",
+                      "startTime": "2026-05-07T23:21:09.746Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -114,12 +114,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 285,
+                      "duration": 1442,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-05T17:00:10.586Z",
+                      "startTime": "2026-05-07T23:21:09.749Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -129,7 +129,7 @@
               ],
               "id": "041dd5da6ee91b9b87ee-62561b41b9474aab818a",
               "file": "ai-generated/generated-login.spec.ts",
-              "line": 25,
+              "line": 22,
               "column": 7
             }
           ]
@@ -139,8 +139,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-05-05T17:00:07.437Z",
-    "duration": 4831.408,
+    "startTime": "2026-05-07T23:21:06.638Z",
+    "duration": 4924.429,
     "expected": 2,
     "skipped": 0,
     "unexpected": 0,

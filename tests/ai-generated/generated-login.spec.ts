@@ -16,7 +16,7 @@ test.describe('[Jira: LOGIN-123] User can log in with valid credentials', () => 
     await page.fill('#password', 'SuperSecretPassword!');
     await page.click('button[type=submit]');
     await expect(page).toHaveURL(/secure/);
-    await expect(page.locator('.flash-success')).toBeVisible(); // broken — self-heal will fix this
+    await expect(page.locator('.flash.success')).toBeVisible(); // broken — self-heal will fix this
   });
 
   test('AC2: Given I am on the login page, when I enter invalid credentials and submit, then I should see an error message', async ({ page }) => {

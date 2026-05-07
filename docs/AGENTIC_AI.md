@@ -85,8 +85,9 @@ npx playwright test tests/ai-generated/generated-login.spec.ts --reporter=json
 - [x] Step 2: Generate a Playwright test from acceptance criteria
 - [x] Step 3: Simulate a test failure and agentic fix
 - [x] Step 4: Link results back to Jira (dry-run + real API)
-- [ ] Step 5: Self-healing test — agent detects flakiness and auto-retries or fixes
-- [ ] Step 6: Expand to multiple stories and full CI pipeline integration
+- [x] Step 5: Self-healing test — agent detects broken selector, inspects DOM, patches test, reruns, posts fix to Jira
+- [x] Step 6: Full CI pipeline — GitHub Actions secrets wired, agentic-ai job running end-to-end
+- [x] Step 7: Real MCP server — expose tools to VS Code Copilot agent mode
 
 ---
 #### Agentic Analysis and Fix Example
@@ -101,6 +102,134 @@ After running the generated test, the following failure was observed:
 - The agent detects that `.flash-success` is not a valid selector (should be `.flash.success`).
 - The agent updates the test code to use the correct selector.
 - The test is rerun to confirm the fix.
+
+---
+
+## Step 6: Full CI Pipeline — GitHub Actions Secrets + Trigger
+
+This step wires the entire agentic workflow into a GitHub Actions CI pipeline so it runs automatically on every push.
+
+### What the pipeline does
+
+The `ci.yml` workflow defines four jobs:
+
+| Job | What it does |
+|---|---|
+| `test` | Runs all Playwright specs (except `ai-generated/`) via `CI_EXCLUDE_AGENTIC=1` |
+| `agentic-ai` | Full agentic loop: generate → run → self-heal → report to Jira |
+| `lint` | ESLint (warnings only, non-blocking) |
+| `security` | `npm audit` at `moderate` level |
+
+### Agentic-AI job steps
+
+```yaml
+- name: Step 2 — Generate Playwright test from Jira story
+  run: node agentic-ai/generate-playwright-test.js
+
+- name: Step 3 — Run generated tests + capture JSON results
+  run: |
+    PLAYWRIGHT_JSON_OUTPUT_NAME=tests/ai-generated/test-results/generated-login.json \
+    npx playwright test tests/ai-generated/generated-login.spec.ts --reporter=json || true
+
+- name: Step 5 — Self-healing agent (detect failure → inspect DOM → patch → rerun)
+  run: node agentic-ai/self-heal.js
+```
+
+The `|| true` on the test run allows the pipeline to continue into the self-heal step even when tests fail — that's intentional; the self-healer needs to see the failure.
+
+### Required GitHub Actions Secrets
+
+Navigate to **Settings → Secrets and variables → Actions** in the repository and add:
+
+| Secret | Value |
+|---|---|
+| `JIRA_BASE_URL` | e.g. `https://yourcompany.atlassian.net` |
+| `JIRA_EMAIL` | Jira account email |
+| `JIRA_API_TOKEN` | API token from https://id.atlassian.com/manage-profile/security/api-tokens |
+| `JIRA_ISSUE_KEY` | e.g. `SCRUM-1` |
+
+These are consumed by `agentic-ai/self-heal.js` and `agentic-ai/report-results-to-jira.js` via `process.env`.
+
+### Triggering the pipeline
+
+The workflow runs automatically on:
+- Every push to `main` or any `Chapter-*` branch
+- Every pull request targeting `main`
+
+Manual trigger: push any commit to the `Chapter-10-AgenticAI` branch.
+
+### Artifacts
+
+After every run the `agentic-ai-test-results` artifact is uploaded and contains `tests/ai-generated/test-results/generated-login.json` — the raw Playwright JSON output before and after self-healing.
+
+---
+
+## Step 7: Real MCP Server — Expose Tools to VS Code Copilot Agent Mode
+
+> **Status: Next step**
+
+In this step we will run a real Model Context Protocol (MCP) server locally and connect it to VS Code Copilot agent mode, enabling the AI agent to call custom tools (run tests, fetch Jira stories, apply fixes) directly from the chat interface.
+
+### Planned tools to expose via MCP
+
+- `run_playwright_tests` — run a specific spec file and return results
+- `fetch_jira_story` — retrieve a Jira issue by key
+- `generate_test_from_story` — call `generate-playwright-test.js` with a given story
+- `self_heal` — trigger the self-heal loop on a failing spec
+- `report_to_jira` — post a test-result comment to a Jira issue
+
+### Setup
+
+**1. Install the MCP SDK (already done)**
+```bash
+npm install @modelcontextprotocol/sdk zod
+```
+
+**2. MCP server: `agentic-ai/mcp-server.js`**
+
+A stdio-based MCP server that exposes five tools:
+
+| Tool | What it does |
+|---|---|
+| `fetch_jira_story` | Read a Jira story from local mock JSON or real Jira REST API |
+| `generate_test_from_story` | Run `generate-playwright-test.js` to emit a Playwright spec |
+| `run_playwright_tests` | Run a spec file and return pass/fail summary + error details |
+| `self_heal` | Trigger the full self-healing loop (detect → inspect DOM → patch → rerun → report) |
+| `report_to_jira` | Post test results as a structured comment on the Jira issue |
+
+**3. VS Code discovery: `.vscode/mcp.json`**
+
+```json
+{
+  "servers": {
+    "playwright-agentic": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/agentic-ai/mcp-server.js"],
+      "env": {}
+    }
+  }
+}
+```
+
+VS Code 1.99+ reads `.vscode/mcp.json` automatically. After opening the workspace, the `playwright-agentic` server appears in the MCP server list and Copilot agent mode can call its tools.
+
+**4. Using tools in Copilot agent mode**
+
+Open VS Code Chat in **Agent mode** (`@workspace` or `Agent` tab) and ask:
+
+> "Fetch the LOGIN-123 Jira story, generate a Playwright test from it, run it, and fix any failures."
+
+Copilot will chain the tools automatically:
+`fetch_jira_story` → `generate_test_from_story` → `run_playwright_tests` → `self_heal` → `report_to_jira`
+
+**5. Run the server manually (for debugging)**
+```bash
+node agentic-ai/mcp-server.js
+```
+
+> **Full MCP deep-dive** — architecture diagrams, JSON-RPC wire protocol, tool registration patterns, Inspector usage, and real-life VS Code workflow:
+> **[agentic-ai/README.md](../agentic-ai/README.md)**
 
 ---
 

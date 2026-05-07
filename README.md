@@ -208,8 +208,8 @@ The `agentic-ai` job in `.github/workflows/ci.yml` runs the full loop on every p
 - [x] Step 3: Run tests + capture JSON results
 - [x] Step 4: Report results to real Jira (SCRUM-1 on `ray-maldonado.atlassian.net`)
 - [x] Step 5: Self-healing agent — detects broken selector, inspects DOM, patches file, reruns, posts fix to Jira
-- [ ] Step 6: Full CI pipeline — GitHub Actions secrets + trigger
-- [ ] Step 7: Real MCP server — expose tools to VS Code Copilot agent mode
+- [x] Step 6: Full CI pipeline — GitHub Actions secrets wired, agentic-ai job running end-to-end
+- [x] Step 7: Real MCP server — expose tools to VS Code Copilot agent mode
 
 > See [docs/AGENTIC_AI.md](docs/AGENTIC_AI.md) for the full deep-dive documentation.
 
@@ -868,8 +868,8 @@ This chapter explores advanced test automation patterns and deeper agentic workf
 - [x] Agentic AI: generate tests from Jira stories (Chapter 10)
 - [x] Agentic AI: self-healing selector repair (Chapter 10)
 - [x] Real Jira API integration — post test results as comments
-- [ ] CI pipeline: agentic-ai job with GitHub Actions secrets (Step 6)
-- [ ] MCP server: expose tools to VS Code Copilot agent mode (Step 7)
+- [x] CI pipeline: agentic-ai job with GitHub Actions secrets (Step 6)
+- [x] MCP server: expose tools to VS Code Copilot agent mode (Step 7)
 
 > As we implement each topic, this README is updated with code examples, troubleshooting, and CI/CD integration notes.
 
