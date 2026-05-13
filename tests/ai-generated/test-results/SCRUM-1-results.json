@@ -52,20 +52,20 @@
   },
   "suites": [
     {
-      "title": "ai-generated/SCRUM-4.spec.ts",
-      "file": "ai-generated/SCRUM-4.spec.ts",
+      "title": "ai-generated/SCRUM-1.spec.ts",
+      "file": "ai-generated/SCRUM-1.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "[SCRUM-4] As a user, I want to select options from a dropdown so that I can choose between available values.",
-          "file": "ai-generated/SCRUM-4.spec.ts",
+          "title": "[LOGIN-123] User can log in and out of the application",
+          "file": "ai-generated/SCRUM-1.spec.ts",
           "line": 12,
           "column": 6,
           "specs": [
             {
-              "title": "AC1: Select \"Option 1\" from the dropdown and verify it is the selected option",
+              "title": "Successful login with valid credentials",
               "ok": true,
               "tags": [],
               "tests": [
@@ -80,12 +80,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1293,
+                      "duration": 1490,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-13T23:39:41.537Z",
+                      "startTime": "2026-05-13T22:31:03.270Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -93,13 +93,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "8abd37b635e1c3d5b99a-58db12ef95ebd64de0ff",
-              "file": "ai-generated/SCRUM-4.spec.ts",
+              "id": "1517e03ec5fe0558ed9a-e4a98baabdc390ffad18",
+              "file": "ai-generated/SCRUM-1.spec.ts",
               "line": 14,
               "column": 7
             },
             {
-              "title": "AC2: Select \"Option 2\" from the dropdown and verify it is the selected option",
+              "title": "Failed login with invalid credentials",
               "ok": true,
               "tags": [],
               "tests": [
@@ -114,12 +114,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1237,
+                      "duration": 1721,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-13T23:39:41.580Z",
+                      "startTime": "2026-05-13T22:31:03.237Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -127,13 +127,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "8abd37b635e1c3d5b99a-97bb7c28fd6e95297baa",
-              "file": "ai-generated/SCRUM-4.spec.ts",
-              "line": 21,
+              "id": "1517e03ec5fe0558ed9a-80d045c53c0c87d49c50",
+              "file": "ai-generated/SCRUM-1.spec.ts",
+              "line": 30,
               "column": 7
             },
             {
-              "title": "AC3: Verify the default placeholder option is disabled and cannot be selected",
+              "title": "Successful logout after login",
               "ok": true,
               "tags": [],
               "tests": [
@@ -148,12 +148,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 1211,
+                      "duration": 1902,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-13T23:39:41.463Z",
+                      "startTime": "2026-05-13T22:31:03.266Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -161,9 +161,9 @@
                   "status": "expected"
                 }
               ],
-              "id": "8abd37b635e1c3d5b99a-e04c7724443221b2eb50",
-              "file": "ai-generated/SCRUM-4.spec.ts",
-              "line": 28,
+              "id": "1517e03ec5fe0558ed9a-c5a302886d035d6727cf",
+              "file": "ai-generated/SCRUM-1.spec.ts",
+              "line": 46,
               "column": 7
             }
           ]
@@ -173,8 +173,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-05-13T23:39:37.535Z",
-    "duration": 5888.735,
+    "startTime": "2026-05-13T22:30:59.797Z",
+    "duration": 5853.545,
     "expected": 3,
     "skipped": 0,
     "unexpected": 0,

@@ -1,0 +1,69 @@
+{
+  "cookies": [
+    {
+      "name": "rack.session",
+      "value": "BAh7CUkiD3Nlc3Npb25faWQGOgZFVEkiRTM2YzcxODIyZWUxNjVkMjQ2NTE2%0AMmM3YWY3NDc3NzgxMjIwMDQyMWYzNWY4N2ExODE5YTI3MmMxYjc4MjQ3NmMG%0AOwBGSSIJY3NyZgY7AEZJIiVlNDgyODQ5MGQ0M2E0ZDJkZjRlNmU5NjY2MDk5%0ANmVlYwY7AEZJIg10cmFja2luZwY7AEZ7B0kiFEhUVFBfVVNFUl9BR0VOVAY7%0AAFRJIi05MTEzZDUzYWU5NWRhYzU0NDQ5MmNhMmQ2MjQyZGI1ZjMyN2E4ZjRj%0ABjsARkkiGUhUVFBfQUNDRVBUX0xBTkdVQUdFBjsAVEkiLWRhMzlhM2VlNWU2%0AYjRiMGQzMjU1YmZlZjk1NjAxODkwYWZkODA3MDkGOwBGSSIKZmxhc2gGOwBG%0AewA%3D%0A--8f9c4fb1b146b259740b070662f40660b1113889",
+      "domain": "the-internet.herokuapp.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "optimizelySegments",
+      "value": "%7B%7D",
+      "domain": ".the-internet.herokuapp.com",
+      "path": "/",
+      "expires": 1813275579.936718,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "optimizelyEndUserId",
+      "value": "oeu1778715579938r0.6763229505667969",
+      "domain": ".the-internet.herokuapp.com",
+      "path": "/",
+      "expires": 1813275579.938696,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "optimizelyBuckets",
+      "value": "%7B%7D",
+      "domain": ".the-internet.herokuapp.com",
+      "path": "/",
+      "expires": 1813275579.940477,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "optimizelyPendingLogEvents",
+      "value": "%5B%22n%3Dhttps%253A%252F%252Fthe-internet.herokuapp.com%252F%26u%3Doeu1778715579938r0.6763229505667969%26wxhr%3Dtrue%26t%3D1778715579942%26f%3D298349752%2C318188263%22%5D",
+      "domain": ".the-internet.herokuapp.com",
+      "path": "/",
+      "expires": 1778715594,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://the-internet.herokuapp.com",
+      "localStorage": [
+        {
+          "name": "auth_token",
+          "value": "demo-token-123"
+        },
+        {
+          "name": "user",
+          "value": "{\"name\":\"Demo User\",\"role\":\"admin\"}"
+        }
+      ]
+    }
+  ]
+}

@@ -123,95 +123,121 @@ test('should reuse localStorage auth state', async ({ page }) => {
 
 ## Chapter 10: Agentic AI Testing
 
-This chapter introduces a fully agentic test automation workflow — an AI-driven loop that reads requirements from Jira, generates Playwright tests, runs them, self-heals failures, and reports results back to Jira automatically.
+This chapter introduces a fully agentic test automation workflow — an AI-driven pipeline that reads a Jira story, uses GPT-4o to generate Playwright TypeScript tests from Gherkin acceptance criteria, runs them, self-heals failures, and reports results back to Jira. All orchestration is in **Python**; all tests stay in **TypeScript**.
 
 ### Architecture
 
-![Agentic AI Architecture](docs/pics/agentic-architecture.png)
-
 ```
-Jira Story (AC) → generate-playwright-test.js → generated-login.spec.ts
-                                                        ↓  (Playwright runs it)
-                                              test-results/generated-login.json
-                                                        ↓
-                                    self-heal.js (detect failure → inspect DOM → patch → rerun)
-                                                        ↓
-                                    report-results-to-jira.js → SCRUM-1 on Jira
+Jira Story (Gherkin AC)
+        │
+        ▼
+automate_story.py  ──► GPT-4o  ──► tests/ai-generated/{KEY}.spec.ts
+                                              │
+                                              ▼  (Playwright runs it)
+                               test-results/{KEY}-results.json
+                                              │
+                    ┌─────────────────────────┤
+                    │                         ▼
+             self_heal.py          report_to_jira.py ──► Jira comment
+      (DOM inspect → patch → rerun)
 ```
 
-### Steps Implemented
+### One-command pipeline
 
-| Step | Script | What it does |
-|------|--------|-------------|
-| 1 | `agentic-ai/data/jira-story.LOGIN-123.json` | Input: mock Jira story with acceptance criteria |
-| 2 | `agentic-ai/generate-playwright-test.js` | Reads AC, generates `tests/ai-generated/generated-login.spec.ts` |
-| 3 | Playwright JSON reporter | Runs tests, writes results to `tests/ai-generated/test-results/generated-login.json` |
-| 4 | `agentic-ai/report-results-to-jira.js` | Parses JSON results, POSTs structured comment to real Jira issue |
-| 5 | `agentic-ai/self-heal.js` | Detects broken selector → launches headless browser → inspects DOM → patches test file → reruns → reports fix to Jira |
-
-### Running the Agentic Workflow
-
-**Prerequisites:** Copy `.env.example` to `.env` and fill in your Jira credentials:
 ```bash
+python3 agentic-ai/pipeline.py SCRUM-4
+```
+
+That single command:
+1. Fetches the story from your real Jira board via REST API
+2. Calls GPT-4o to generate a Playwright TypeScript test from the Gherkin ACs
+3. Runs the tests with `npx playwright test` and captures JSON results
+4. Posts a structured test report comment to the Jira issue
+
+### Scripts Reference
+
+| Script | Purpose |
+|--------|---------|
+| `pipeline.py` | **One-shot pipeline** — fetch → generate → run → report, no interaction |
+| `automate_story.py` | Fetch Jira story + call GPT-4o → write `{KEY}.spec.ts` |
+| `generate_test.py` | Template-based generator (self-heal demo, intentional broken selector) |
+| `self_heal.py` | Detect broken selector → inspect live DOM → patch test → rerun → report |
+| `report_to_jira.py` | Read Playwright JSON results → POST structured comment to Jira |
+| `mcp_server.py` | MCP stdio server — exposes 7 tools to VS Code Copilot agent mode |
+
+### MCP Tools (Copilot Agent Mode)
+
+| Tool | What it does |
+|------|-------------|
+| `full_pipeline` | One-shot: fetch → generate → run → report for any story key |
+| `automate_jira_story` | Fetch story + GPT-4o → write spec file |
+| `run_playwright_tests` | Run a spec and return pass/fail summary |
+| `report_to_jira` | Post results to Jira |
+| `fetch_jira_story` | Fetch and display a Jira story |
+| `generate_test_from_story` | Template-based test generation |
+| `self_heal` | Self-healing agent loop |
+
+### Prerequisites
+
+```bash
+# 1. Install Python dependencies
+pip install -r requirements.txt
+playwright install chromium
+
+# 2. Configure environment
 cp .env.example .env
-# Edit .env with your values:
-# JIRA_BASE_URL=https://yourcompany.atlassian.net
-# JIRA_EMAIL=your.email@company.com
-# JIRA_API_TOKEN=your_api_token   ← https://id.atlassian.com/manage-profile/security/api-tokens
-# JIRA_ISSUE_KEY=SCRUM-1
+# Fill in:
+#   JIRA_BASE_URL=https://yourcompany.atlassian.net
+#   JIRA_EMAIL=your.email@company.com
+#   JIRA_API_TOKEN=your_token        ← https://id.atlassian.com/manage-profile/security/api-tokens
+#   OPENAI_API_KEY=sk-...
+#   APP_URL=https://the-internet.herokuapp.com
 ```
 
-**Step 2 — Generate test from Jira story:**
+### Running the pipeline
+
 ```bash
-node agentic-ai/generate-playwright-test.js
+# Full pipeline (fetch → generate → test → report)
+python3 agentic-ai/pipeline.py SCRUM-1
+
+# Or individual steps:
+python3 agentic-ai/automate_story.py SCRUM-1
+
+PLAYWRIGHT_JSON_OUTPUT_NAME=tests/ai-generated/test-results/SCRUM-1-results.json \
+  npx playwright test tests/ai-generated/SCRUM-1.spec.ts --reporter=json
+
+JIRA_ISSUE_KEY=SCRUM-1 \
+  RESULTS_FILE=tests/ai-generated/test-results/SCRUM-1-results.json \
+  python3 agentic-ai/report_to_jira.py
+
+# Self-healing demo
+python3 agentic-ai/self_heal.py
 ```
 
-**Step 3 — Run generated tests:**
-```bash
-PLAYWRIGHT_JSON_OUTPUT_NAME=tests/ai-generated/test-results/generated-login.json \
-npx playwright test tests/ai-generated/generated-login.spec.ts --reporter=json
-```
+### From Jira to passing tests — end-to-end flow
 
-**Step 4 — Report results to Jira:**
-```bash
-node agentic-ai/report-results-to-jira.js
-```
-
-**Step 5 — Full self-healing loop (detects failure, fixes selector, reruns, reports):**
-```bash
-node agentic-ai/self-heal.js
-```
-
-### How Self-Healing Works
-
-1. Runs the Playwright test suite
-2. If a test fails, extracts the broken selector from Playwright's error message
-3. Launches a headless browser, navigates to the page, and queries all `[class*="flash"]` / `[class*="alert"]` elements
-4. Ranks candidates — prefers elements whose CSS classes contain `"success"` explicitly
-5. Patches the test file in-place with the correct selector
-6. Reruns the suite to confirm green
-7. Posts a self-heal report to the Jira issue with before/after selectors and final test results
-
-### CI Integration (Step 6 — in progress)
-
-The `agentic-ai` job in `.github/workflows/ci.yml` runs the full loop on every push:
-- Generates the test from the Jira story
-- Runs the generated tests
-- Invokes the self-healing agent if needed
-- Uploads test results as a CI artifact
-- Jira credentials are stored as GitHub Actions secrets (`JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_ISSUE_KEY`)
+1. Write a story in Jira with Gherkin acceptance criteria:
+   ```
+   AC1: Given I am on /checkboxes, When I check checkbox 1, Then it should be checked.
+   AC2: Given I am on /checkboxes, When I uncheck checkbox 2, Then it should be unchecked.
+   ```
+2. Run `python3 agentic-ai/pipeline.py SCRUM-3` — GPT-4o maps each AC to a `test()` block
+3. Playwright executes the generated spec; results are captured as JSON
+4. A structured comment is posted to the Jira issue automatically
 
 ### Chapter 10 Progress
 
-- [x] Step 1: Mock Jira story as AI input (`agentic-ai/data/jira-story.LOGIN-123.json`)
-- [x] Step 2: Generate Playwright test from acceptance criteria
+- [x] Step 1: Gherkin mock stories (`agentic-ai/data/jira-story.LOGIN-123.json`)
+- [x] Step 2: Template-based test generator (`generate_test.py`)
 - [x] Step 3: Run tests + capture JSON results
-- [x] Step 4: Report results to real Jira (SCRUM-1 on `ray-maldonado.atlassian.net`)
-- [x] Step 5: Self-healing agent — detects broken selector, inspects DOM, patches file, reruns, posts fix to Jira
-- [x] Step 6: Full CI pipeline — GitHub Actions secrets wired, agentic-ai job running end-to-end
-- [x] Step 7: Real MCP server — expose tools to VS Code Copilot agent mode
+- [x] Step 4: Report results to real Jira via REST API
+- [x] Step 5: Self-healing agent (broken selector → DOM inspect → patch → rerun → report)
+- [x] Step 6: Python migration — all orchestration in Python 3
+- [x] Step 7: MCP server (`mcp_server.py`) — 7 tools exposed to VS Code Copilot agent mode
+- [x] Step 8: Real Jira API integration — fetch live stories, post comments
+- [x] Step 9: GPT-4o LLM test generation — `automate_story.py` + `pipeline.py`
 
-> See [docs/AGENTIC_AI.md](docs/AGENTIC_AI.md) for the full deep-dive documentation.
+> See [agentic-ai/README.md](agentic-ai/README.md) for deep-dive documentation on the MCP server and protocol.
 
 ---
 

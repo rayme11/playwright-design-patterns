@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 3
+      "actualWorkers": 2
     },
     "preserveOutput": "always",
     "projects": [
@@ -20,7 +20,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 3
+          "actualWorkers": 2
         },
         "id": "chromium",
         "name": "chromium",
@@ -52,20 +52,20 @@
   },
   "suites": [
     {
-      "title": "ai-generated/SCRUM-4.spec.ts",
-      "file": "ai-generated/SCRUM-4.spec.ts",
+      "title": "ai-generated/SCRUM-3.spec.ts",
+      "file": "ai-generated/SCRUM-3.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "[SCRUM-4] As a user, I want to select options from a dropdown so that I can choose between available values.",
-          "file": "ai-generated/SCRUM-4.spec.ts",
-          "line": 12,
+          "title": "[SCRUM-3] Checkboxes: users should be able to toggle checkbox state",
+          "file": "ai-generated/SCRUM-3.spec.ts",
+          "line": 11,
           "column": 6,
           "specs": [
             {
-              "title": "AC1: Select \"Option 1\" from the dropdown and verify it is the selected option",
+              "title": "AC1: Toggle unchecked checkbox 1 to checked state and verify it is checked",
               "ok": true,
               "tags": [],
               "tests": [
@@ -80,12 +80,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1293,
+                      "duration": 1082,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-13T23:39:41.537Z",
+                      "startTime": "2026-05-13T23:06:05.773Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -93,13 +93,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "8abd37b635e1c3d5b99a-58db12ef95ebd64de0ff",
-              "file": "ai-generated/SCRUM-4.spec.ts",
-              "line": 14,
+              "id": "46377cc7050f35258eb7-46cc62fba5429c59d487",
+              "file": "ai-generated/SCRUM-3.spec.ts",
+              "line": 13,
               "column": 7
             },
             {
-              "title": "AC2: Select \"Option 2\" from the dropdown and verify it is the selected option",
+              "title": "AC2: Toggle checked checkbox 2 to unchecked state and verify it is unchecked",
               "ok": true,
               "tags": [],
               "tests": [
@@ -114,12 +114,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1237,
+                      "duration": 1112,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-13T23:39:41.580Z",
+                      "startTime": "2026-05-13T23:06:05.766Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -127,43 +127,9 @@
                   "status": "expected"
                 }
               ],
-              "id": "8abd37b635e1c3d5b99a-97bb7c28fd6e95297baa",
-              "file": "ai-generated/SCRUM-4.spec.ts",
-              "line": 21,
-              "column": 7
-            },
-            {
-              "title": "AC3: Verify the default placeholder option is disabled and cannot be selected",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1211,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-05-13T23:39:41.463Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "8abd37b635e1c3d5b99a-e04c7724443221b2eb50",
-              "file": "ai-generated/SCRUM-4.spec.ts",
-              "line": 28,
+              "id": "46377cc7050f35258eb7-b991388bb4ecf8eb0f24",
+              "file": "ai-generated/SCRUM-3.spec.ts",
+              "line": 25,
               "column": 7
             }
           ]
@@ -173,9 +139,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-05-13T23:39:37.535Z",
-    "duration": 5888.735,
-    "expected": 3,
+    "startTime": "2026-05-13T23:06:02.235Z",
+    "duration": 4964.732,
+    "expected": 2,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

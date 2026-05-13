@@ -284,6 +284,34 @@ server.tool(
   })
 );
 
+// ── Tool 6: automate_jira_story ────────────────────────────────────────────
+server.tool(
+  'automate_jira_story',
+  'Full agentic pipeline: fetch a Jira story by key, call an LLM to generate a Playwright TypeScript test from its acceptance criteria, and write the test to tests/ai-generated/{storyKey}.spec.ts. Requires OPENAI_API_KEY in .env.',
+  {
+    storyKey: z
+      .string()
+      .describe('Jira issue key to automate, e.g. "LOGIN-123" or "SCRUM-1".'),
+  },
+  logTool('automate_jira_story', async ({ storyKey }) => {
+    const { ok, stdout, stderr } = runScript('agentic-ai/automate-story.js', {
+      STORY_KEY: storyKey,
+    });
+    const output = stdout || stderr;
+    return {
+      content: [
+        {
+          type: 'text',
+          text: ok
+            ? `✅ Playwright test generated for ${storyKey}.\n\n${output}`
+            : `❌ Automation failed for ${storyKey}.\n\n${output}`,
+        },
+      ],
+      isError: !ok,
+    };
+  })
+);
+
 // ─── Start ───────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -294,7 +322,7 @@ async function main() {
     `\n${CYAN}${BOLD}╔══════════════════════════════════════════════════════╗${RESET}\n` +
     `${CYAN}${BOLD}║  playwright-agentic MCP server  —  stdio transport   ║${RESET}\n` +
     `${CYAN}${BOLD}╚══════════════════════════════════════════════════════╝${RESET}\n` +
-    `${DIM}Tools: fetch_jira_story · generate_test_from_story · run_playwright_tests · self_heal · report_to_jira${RESET}\n` +
+    `${DIM}Tools: fetch_jira_story · generate_test_from_story · run_playwright_tests · self_heal · report_to_jira · automate_jira_story${RESET}\n` +
     `${DIM}Tip:   npx @modelcontextprotocol/inspector node agentic-ai/mcp-server.js${RESET}\n\n`
   );
 }

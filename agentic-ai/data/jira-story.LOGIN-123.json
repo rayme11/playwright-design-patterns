@@ -1,10 +1,13 @@
 {
   "key": "LOGIN-123",
-  "summary": "User can log in with valid credentials",
-  "description": "As a registered user, I want to log in so that I can access my account.",
+  "summary": "User can log in and out of the application",
+  "description": "As a registered user,\nI want to log in to the application with my credentials\nSo that I can access my secure account area and manage my session.",
   "acceptanceCriteria": [
-    "AC1: Given I am on the login page, when I enter valid credentials and submit, then I should see the secure area.",
-    "AC2: Given I am on the login page, when I enter invalid credentials and submit, then I should see an error message."
+    "Scenario: Successful login with valid credentials\n  Given I am on the login page at /login\n  When I enter username 'tomsmith' and password 'SuperSecretPassword!'\n  And I click the login button\n  Then I should be redirected to the secure area\n  And I should see a flash success message",
+
+    "Scenario: Failed login with invalid credentials\n  Given I am on the login page at /login\n  When I enter username 'wronguser' and password 'wrongpassword'\n  And I click the login button\n  Then I should remain on the login page\n  And I should see a flash error message",
+
+    "Scenario: Successful logout after login\n  Given I am logged in as 'tomsmith'\n  When I click the logout button\n  Then I should be redirected to the login page\n  And I should see a flash message confirming I have logged out"
   ],
   "testCaseLink": "TEST-456"
 }

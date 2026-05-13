@@ -1,0 +1,15 @@
+# Agentic AI orchestration — Python dependencies
+# Install with: pip install -r requirements.txt
+# Then install Playwright browsers: playwright install chromium
+
+# MCP server (Model Context Protocol SDK)
+mcp>=1.0.0
+
+# Environment variable loading
+python-dotenv>=1.0.0
+
+# OpenAI client (LLM test generation)
+openai>=1.0.0
+
+# Playwright Python (DOM inspection in self-healing)
+playwright>=1.40.0
