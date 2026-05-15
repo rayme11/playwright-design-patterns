@@ -80,14 +80,20 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1552,
+                      "duration": 1190,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-13T23:30:55.266Z",
+                      "startTime": "2026-05-13T23:56:55.345Z",
                       "annotations": [],
-                      "attachments": []
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/raymaldonado/Library/CloudStorage/GoogleDrive-vivachihuahua2004@gmail.com/My Drive/Code/playwright-design-patterns/test-results/ai-generated-SCRUM-4--SCRU-e3b1e-y-it-is-the-selected-option-chromium/test-finished-1.png"
+                        }
+                      ]
                     }
                   ],
                   "status": "expected"
@@ -114,14 +120,20 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1385,
+                      "duration": 1353,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-13T23:30:55.281Z",
+                      "startTime": "2026-05-13T23:56:55.350Z",
                       "annotations": [],
-                      "attachments": []
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/raymaldonado/Library/CloudStorage/GoogleDrive-vivachihuahua2004@gmail.com/My Drive/Code/playwright-design-patterns/test-results/ai-generated-SCRUM-4--SCRU-ec1b3-y-it-is-the-selected-option-chromium/test-finished-1.png"
+                        }
+                      ]
                     }
                   ],
                   "status": "expected"
@@ -148,14 +160,20 @@
                       "workerIndex": 2,
                       "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 1319,
+                      "duration": 1336,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-13T23:30:55.287Z",
+                      "startTime": "2026-05-13T23:56:55.396Z",
                       "annotations": [],
-                      "attachments": []
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/raymaldonado/Library/CloudStorage/GoogleDrive-vivachihuahua2004@gmail.com/My Drive/Code/playwright-design-patterns/test-results/ai-generated-SCRUM-4--SCRU-5a8be-bled-and-cannot-be-selected-chromium/test-finished-1.png"
+                        }
+                      ]
                     }
                   ],
                   "status": "expected"
@@ -173,8 +191,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-05-13T23:30:50.765Z",
-    "duration": 6540.366,
+    "startTime": "2026-05-13T23:56:51.303Z",
+    "duration": 5869.269,
     "expected": 3,
     "skipped": 0,
     "unexpected": 0,

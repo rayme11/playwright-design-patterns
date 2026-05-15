@@ -16,6 +16,7 @@ Run manually: python agentic-ai/mcp_server.py
 
 import base64
 import json
+import logging
 import os
 import ssl
 import subprocess
@@ -31,8 +32,24 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 ROOT = Path(__file__).parent.parent
 mcp  = FastMCP("playwright-agentic")
 
+_log_file = Path(__file__).parent / "mcp_server.log"
+_handler  = logging.FileHandler(str(_log_file))
+_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+log = logging.getLogger("playwright-mcp")
+log.setLevel(logging.DEBUG)
+log.addHandler(_handler)
+log.propagate = False
+log.info("mcp_server.py starting up")
+
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
+
+def _tool_log(name: str, args: dict, result: str) -> None:
+    """Log a tool call + truncated result to the log file."""
+    preview = result.replace("\n", " ")[:120]
+    log.info(f"CALL  {name}  args={args}")
+    log.info(f"REPLY {name}  => {preview}")
+
 
 def _run_script(script_path: str, extra_env: dict | None = None, args: list | None = None) -> dict:
     """Run a Python script in the project root. Returns {ok, output}."""
@@ -96,27 +113,26 @@ def fetch_jira_story(story_key: str = "LOGIN-123") -> str:
     Args:
         story_key: Jira issue key, e.g. "LOGIN-123". Defaults to LOGIN-123.
     """
+    log.debug(f"fetch_jira_story called with story_key={story_key}")
     local_path = Path(__file__).parent / "data" / f"jira-story.{story_key}.json"
     if local_path.exists():
-        return local_path.read_text(encoding="utf-8")
+        out = local_path.read_text(encoding="utf-8")
+        _tool_log("fetch_jira_story", {"story_key": story_key}, out)
+        return out
 
     jira_url   = os.getenv("JIRA_BASE_URL", "").rstrip("/")
     jira_email = os.getenv("JIRA_EMAIL", "")
     jira_token = os.getenv("JIRA_API_TOKEN", "")
 
     if not all([jira_url, jira_email, jira_token]):
-        return (
+        out = (
             f"No local mock found for {story_key} and Jira credentials are not set.\n"
             "Set JIRA_BASE_URL, JIRA_EMAIL, and JIRA_API_TOKEN in your .env file."
         )
-
-    import base64, urllib.request
-    auth = base64.b64encode(f"{jira_email}:{jira_token}".encode()).decode()
-    url  = f"{jira_url}/rest/api/3/issue/{story_key}"
-    req  = urllib.request.Request(url, headers={"Authorization": f"Basic {auth}", "Accept": "application/json"})
+        _tool_log("fetch_jira_story", {"story_key": story_key}, out)
+        return out
 
     try:
-        import base64, urllib.request, ssl
         auth = base64.b64encode(f"{jira_email}:{jira_token}".encode()).decode()
         url  = f"{jira_url}/rest/api/3/issue/{story_key}"
         req  = urllib.request.Request(url, headers={"Authorization": f"Basic {auth}", "Accept": "application/json"})
@@ -125,9 +141,13 @@ def fetch_jira_story(story_key: str = "LOGIN-123") -> str:
         ctx.verify_mode = ssl.CERT_NONE
         with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:
             data = json.loads(resp.read().decode())
-        return json.dumps(data, indent=2)
+        out = json.dumps(data, indent=2)
+        _tool_log("fetch_jira_story", {"story_key": story_key}, out)
+        return out
     except Exception as exc:
-        return f"Jira API error: {exc}"
+        out = f"Jira API error: {exc}"
+        _tool_log("fetch_jira_story", {"story_key": story_key}, out)
+        return out
 
 
 # ─── Tool 2: generate_test_from_story ────────────────────────────────────────
@@ -139,10 +159,11 @@ def generate_test_from_story() -> str:
     using a hardcoded template. Runs generate_test.py.
     The first test intentionally uses a broken selector (.flash-success) for the self-heal demo.
     """
-    r      = _run_script("agentic-ai/generate_test.py")
-    if r["ok"]:
-        return f"Test generated successfully.\n\n{r['output']}"
-    return f"Generator failed.\n\n{r['output']}"
+    log.debug("generate_test_from_story called")
+    r   = _run_script("agentic-ai/generate_test.py")
+    out = f"Test generated successfully.\n\n{r['output']}" if r["ok"] else f"Generator failed.\n\n{r['output']}"
+    _tool_log("generate_test_from_story", {}, out)
+    return out
 
 
 # ─── Tool 3: automate_jira_story ─────────────────────────────────────────────
@@ -160,10 +181,11 @@ def automate_jira_story(story_key: str) -> str:
     Args:
         story_key: Jira issue key to automate, e.g. "LOGIN-123" or "SCRUM-1".
     """
-    r = _run_script("agentic-ai/automate_story.py", args=[story_key])
-    if r["ok"]:
-        return f"✅ Playwright test generated for {story_key}.\n\n{r['output']}"
-    return f"❌ Automation failed for {story_key}.\n\n{r['output']}"
+    log.debug(f"automate_jira_story called with story_key={story_key}")
+    r   = _run_script("agentic-ai/automate_story.py", args=[story_key])
+    out = f"✅ Playwright test generated for {story_key}.\n\n{r['output']}" if r["ok"] else f"❌ Automation failed for {story_key}.\n\n{r['output']}"
+    _tool_log("automate_jira_story", {"story_key": story_key}, out)
+    return out
 
 
 # ─── Tool 4: run_playwright_tests ────────────────────────────────────────────
@@ -179,14 +201,17 @@ def run_playwright_tests(
         spec_file: Workspace-relative path to the spec file.
                    Defaults to tests/ai-generated/generated-login.spec.ts.
     """
+    log.debug(f"run_playwright_tests called with spec_file={spec_file}")
     stem        = Path(spec_file).stem.replace(".spec", "")
     json_output = f"tests/ai-generated/test-results/{stem}-results.json"
     (ROOT / "tests" / "ai-generated" / "test-results").mkdir(parents=True, exist_ok=True)
-    r           = _run_playwright(spec_file, json_output)
-    summary     = _summarise_playwright_results(json_output)
-    status      = "✅ All tests passed." if r["ok"] else "❌ Tests failed."
-    raw         = r["stdout"] or r["stderr"]
-    return f"{status}\n\n{summary}\n\nRaw output:\n{raw}"
+    r       = _run_playwright(spec_file, json_output)
+    summary = _summarise_playwright_results(json_output)
+    status  = "✅ All tests passed." if r["ok"] else "❌ Tests failed."
+    raw     = r["stdout"] or r["stderr"]
+    out     = f"{status}\n\n{summary}\n\nRaw output:\n{raw}"
+    _tool_log("run_playwright_tests", {"spec_file": spec_file}, out)
+    return out
 
 
 # ─── Tool 5: full_pipeline ──────────────────────────────────────────────────
@@ -202,10 +227,11 @@ def full_pipeline(story_key: str) -> str:
     Args:
         story_key: Jira issue key, e.g. "SCRUM-4".
     """
-    r = _run_script("agentic-ai/pipeline.py", args=[story_key])
-    if r["ok"]:
-        return f"✅ Pipeline complete for {story_key}.\n\n{r['output']}"
-    return f"❌ Pipeline failed for {story_key}.\n\n{r['output']}"
+    log.debug(f"full_pipeline called with story_key={story_key}")
+    r   = _run_script("agentic-ai/pipeline.py", args=[story_key])
+    out = f"✅ Pipeline complete for {story_key}.\n\n{r['output']}" if r["ok"] else f"❌ Pipeline failed for {story_key}.\n\n{r['output']}"
+    _tool_log("full_pipeline", {"story_key": story_key}, out)
+    return out
 
 
 # ─── Tool 6: self_heal ────────────────────────────────────────────────────────
@@ -220,10 +246,11 @@ def self_heal() -> str:
       4. Rerun to confirm the fix
       5. Post the report to Jira
     """
-    r           = _run_script("agentic-ai/self_heal.py")
-    if r["ok"]:
-        return f"Self-heal completed successfully.\n\n{r['output']}"
-    return f"Self-heal encountered an error.\n\n{r['output']}"
+    log.debug("self_heal called")
+    r   = _run_script("agentic-ai/self_heal.py")
+    out = f"Self-heal completed successfully.\n\n{r['output']}" if r["ok"] else f"Self-heal encountered an error.\n\n{r['output']}"
+    _tool_log("self_heal", {}, out)
+    return out
 
 
 # ─── Tool 6: report_to_jira ───────────────────────────────────────────────────
@@ -239,15 +266,16 @@ def report_to_jira(issue_key: str = "", results_file: str = "") -> str:
         results_file: Path to the Playwright JSON results file.
                       Defaults to tests/ai-generated/test-results/{issue_key}-results.json.
     """
+    log.debug(f"report_to_jira called with issue_key={issue_key} results_file={results_file}")
     if not results_file and issue_key:
         results_file = f"tests/ai-generated/test-results/{issue_key}-results.json"
     extra: dict = {}
     if issue_key:    extra["JIRA_ISSUE_KEY"] = issue_key
     if results_file: extra["RESULTS_FILE"]   = results_file
-    r = _run_script("agentic-ai/report_to_jira.py", extra)
-    if r["ok"]:
-        return f"Jira report posted successfully.\n\n{r['output']}"
-    return f"Jira reporter encountered an error.\n\n{r['output']}"
+    r   = _run_script("agentic-ai/report_to_jira.py", extra)
+    out = f"Jira report posted successfully.\n\n{r['output']}" if r["ok"] else f"Jira reporter encountered an error.\n\n{r['output']}"
+    _tool_log("report_to_jira", {"issue_key": issue_key}, out)
+    return out
 
 
 # ─── Start ────────────────────────────────────────────────────────────────────

@@ -63,11 +63,22 @@ def main():
     ok(f"Test written → {spec_file.relative_to(ROOT)}")
 
     # ── Step 3: Run Playwright tests, write JSON results ─────────────────────
-    log("Step 2/3 — Running Playwright tests...")
-    run(
+    log("Step 2/4 — Running Playwright tests...")
+    test_result = subprocess.run(
         ["npx", "playwright", "test", str(spec_file.relative_to(ROOT)), "--reporter=json"],
-        env={"PLAYWRIGHT_JSON_OUTPUT_NAME": str(results_file)},
+        cwd=str(ROOT),
+        env={**os.environ, "PLAYWRIGHT_JSON_OUTPUT_NAME": str(results_file)},
+        text=True,
     )
+    tests_passed = test_result.returncode == 0
+
+    # ── Step 3 (conditional): Self-heal if tests failed ───────────────────────
+    if not tests_passed:
+        log(f"Step 3/4 — ⚠️  Tests failed — invoking self-heal for {story_key}...")
+        run([sys.executable, "agentic-ai/self_heal.py", story_key])
+        ok("Self-heal loop complete — Jira updated by self-heal")
+        return  # self_heal already posted its own detailed report
+
     ok(f"Tests passed → {results_file.relative_to(ROOT)}")
 
     # ── Step 4: Report results to Jira ───────────────────────────────────────

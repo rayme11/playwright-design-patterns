@@ -34,6 +34,7 @@ export default defineConfig({
     // Uncomment and set your baseURL if needed
     // baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
+    screenshot: 'on',
     // Use the saved authentication state for all tests
     storageState: 'storageState.json',
   },

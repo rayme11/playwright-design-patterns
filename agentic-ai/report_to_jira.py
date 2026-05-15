@@ -24,6 +24,7 @@ import ssl
 import sys
 import urllib.request
 import urllib.error
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -53,6 +54,63 @@ def collect_tests(suites: list) -> list:
                 })
         results.extend(collect_tests(suite.get("suites", [])))
     return results
+
+
+def collect_screenshots(suites: list) -> list:
+    """Collect screenshot file paths from Playwright JSON suite attachments."""
+    paths = []
+    for suite in suites:
+        for spec in suite.get("specs", []):
+            for test in spec.get("tests", []):
+                for result in test.get("results", []):
+                    for att in result.get("attachments", []):
+                        if att.get("contentType") == "image/png" and att.get("path"):
+                            p = Path(att["path"])
+                            if p.exists():
+                                paths.append(p)
+        paths.extend(collect_screenshots(suite.get("suites", [])))
+    return paths
+
+
+def upload_attachments(paths: list) -> None:
+    jira_url   = os.getenv("JIRA_BASE_URL", "").rstrip("/")
+    jira_email = os.getenv("JIRA_EMAIL", "")
+    jira_token = os.getenv("JIRA_API_TOKEN", "")
+
+    if not all([jira_url, jira_email, jira_token]):
+        print(f"No Jira credentials — skipping screenshot upload ({len(paths)} file(s)).")
+        return
+
+    auth = base64.b64encode(f"{jira_email}:{jira_token}".encode()).decode()
+    url  = f"{jira_url}/rest/api/3/issue/{JIRA_KEY}/attachments"
+    ctx  = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode    = ssl.CERT_NONE
+
+    for path in paths:
+        boundary = uuid.uuid4().hex
+        body = (
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="file"; filename="{path.name}"\r\n'
+            f"Content-Type: image/png\r\n\r\n"
+        ).encode() + path.read_bytes() + f"\r\n--{boundary}--\r\n".encode()
+
+        req = urllib.request.Request(
+            url,
+            data=body,
+            headers={
+                "Authorization":     f"Basic {auth}",
+                "X-Atlassian-Token": "no-check",
+                "Content-Type":      f"multipart/form-data; boundary={boundary}",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:
+                resp.read()
+            print(f"📎 Uploaded screenshot: {path.name}")
+        except urllib.error.HTTPError as exc:
+            print(f"⚠️  Screenshot upload failed: {exc.code} {exc.reason}", file=sys.stderr)
 
 
 def build_comment(stats: dict, tests: list) -> str:
@@ -147,6 +205,11 @@ def main() -> None:
     print("\n────────────────────────────────────────────────────────────────────────\n")
 
     post_to_jira(comment_body)
+
+    screenshots = collect_screenshots(suites)
+    print(f"📸 Screenshots found: {len(screenshots)}")
+    if screenshots:
+        upload_attachments(screenshots)
 
 
 if __name__ == "__main__":

@@ -313,10 +313,12 @@ playwright-design-patterns/
 ├── agentic-ai/                        # Agentic AI workflow scripts (Chapter 10)
 │   ├── data/
 │   │   └── jira-story.LOGIN-123.json  # Mock Jira user story (AC input)
-│   ├── generate-playwright-test.js    # Step 2: generate test from Jira story
-│   ├── self-heal.js                   # Step 5: detect failure → inspect DOM → patch → rerun
-│   ├── report-results-to-jira.js      # Step 4: post test results to real Jira issue
-│   └── render-diagram.js              # Renders architecture diagram to PNG
+│   ├── automate_story.py              # Step 1+2: fetch Jira story → GPT-4o → write spec
+│   ├── generate_test.py               # Template-based test generator (no LLM)
+│   ├── self_heal.py                   # Detect failure → inspect DOM → patch → rerun
+│   ├── report_to_jira.py              # Post test results + screenshots to Jira
+│   ├── pipeline.py                    # Single-command full pipeline orchestrator
+│   └── mcp_server.py                  # FastMCP server — exposes all tools to VS Code
 │
 ├── tests/
 │   ├── ai-generated/                  # AI-generated tests + results (Chapter 10)

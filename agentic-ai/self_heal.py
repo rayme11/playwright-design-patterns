@@ -34,10 +34,13 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-ROOT         = Path(__file__).parent.parent
-TEST_FILE    = ROOT / "tests" / "ai-generated" / "generated-login.spec.ts"
-RESULTS_FILE = ROOT / "tests" / "ai-generated" / "test-results" / "generated-login.json"
-JIRA_KEY     = os.getenv("JIRA_ISSUE_KEY", "SCRUM-1")
+ROOT      = Path(__file__).parent.parent
+JIRA_KEY  = (
+    sys.argv[1] if len(sys.argv) > 1
+    else os.getenv("STORY_KEY", os.getenv("JIRA_ISSUE_KEY", "SCRUM-1"))
+).strip().upper()
+TEST_FILE    = ROOT / "tests" / "ai-generated" / f"{JIRA_KEY}.spec.ts"
+RESULTS_FILE = ROOT / "tests" / "ai-generated" / "test-results" / f"{JIRA_KEY}-results.json"
 
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
@@ -53,11 +56,11 @@ def run_tests() -> bool:
     log("Running Playwright tests...")
     result = subprocess.run(
         ["npx", "playwright", "test",
-         "tests/ai-generated/generated-login.spec.ts",
+         str(TEST_FILE.relative_to(ROOT)),
          "--reporter=json"],
         cwd=ROOT,
         env={**os.environ,
-             "PLAYWRIGHT_JSON_OUTPUT_NAME": "tests/ai-generated/test-results/generated-login.json"},
+             "PLAYWRIGHT_JSON_OUTPUT_NAME": str(RESULTS_FILE)},
         capture_output=True,
         text=True,
     )
