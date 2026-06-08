@@ -17,3 +17,20 @@
 2026-05-15 18:08:48,094 DEBUG fetch_jira_story called with story_key=SCRUM-1
 2026-05-15 18:08:48,642 INFO CALL  fetch_jira_story  args={'story_key': 'SCRUM-1'}
 2026-05-15 18:08:48,642 INFO REPLY fetch_jira_story  => {   "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",   "id": "10000",   "
+2026-05-15 18:13:34,383 DEBUG fetch_jira_story called with story_key=SCRUM-1
+2026-05-15 18:13:34,905 INFO CALL  fetch_jira_story  args={'story_key': 'SCRUM-1'}
+2026-05-15 18:13:34,905 INFO REPLY fetch_jira_story  => {   "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",   "id": "10000",   "
+2026-05-22 15:14:41,692 INFO mcp_server.py starting up
+2026-05-27 10:12:23,065 INFO mcp_server.py starting up
+2026-06-08 11:36:34,056 INFO mcp_server.py starting up
+2026-06-08 11:40:41,946 INFO mcp_server.py starting up
+2026-06-08 11:42:19,559 INFO mcp_server.py starting up
+2026-06-08 11:43:51,017 DEBUG fetch_jira_story called with story_key=LOGIN-123
+2026-06-08 11:43:51,028 INFO CALL  fetch_jira_story  args={'story_key': 'LOGIN-123'}
+2026-06-08 11:43:51,028 INFO REPLY fetch_jira_story  => {   "key": "LOGIN-123",   "summary": "User can log in and out of the application",   "description": "As a registered use
+2026-06-08 11:45:02,437 DEBUG fetch_jira_story called with story_key=LOGIN-1
+2026-06-08 11:45:02,920 INFO CALL  fetch_jira_story  args={'story_key': 'LOGIN-1'}
+2026-06-08 11:45:02,920 INFO REPLY fetch_jira_story  => Jira API error: HTTP Error 404: Not Found
+2026-06-08 11:45:23,932 DEBUG fetch_jira_story called with story_key=SCRUM-1
+2026-06-08 11:45:24,356 INFO CALL  fetch_jira_story  args={'story_key': 'SCRUM-1'}
+2026-06-08 11:45:24,356 INFO REPLY fetch_jira_story  => {   "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",   "id": "10000",   "
