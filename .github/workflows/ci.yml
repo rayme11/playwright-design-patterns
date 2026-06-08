@@ -48,6 +48,7 @@ jobs:
       JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
       JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
       JIRA_ISSUE_KEY: ${{ secrets.JIRA_ISSUE_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -57,14 +58,22 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Node dependencies
         run: npm ci
 
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
       - name: Step 2 — Generate Playwright test from Jira story
-        run: node agentic-ai/generate-playwright-test.js
+        run: python agentic-ai/generate_test.py
 
       - name: Step 3 — Run generated tests + capture JSON results
         run: |
@@ -72,7 +81,7 @@ jobs:
           npx playwright test tests/ai-generated/generated-login.spec.ts --reporter=json || true
 
       - name: Step 5 — Self-healing agent (detect failure → inspect DOM → patch → rerun)
-        run: node agentic-ai/self-heal.js
+        run: python agentic-ai/self_heal.py
 
       - name: Upload generated test results
         if: always()
