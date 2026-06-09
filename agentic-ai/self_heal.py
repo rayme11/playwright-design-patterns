@@ -51,18 +51,23 @@ def log(msg: str) -> None:
 
 # ─── Test Runner ──────────────────────────────────────────────────────────────
 
+def _pw_cmd() -> list[str]:
+    """Use node cli.js directly — avoids npx hanging on paths with spaces (Google Drive)."""
+    cli = ROOT / "node_modules" / "@playwright" / "test" / "cli.js"
+    return ["node", str(cli)] if cli.exists() else ["npx", "playwright"]
+
+
 def run_tests() -> bool:
     """Run the generated Playwright spec. Returns True if all tests pass."""
     log("Running Playwright tests...")
     result = subprocess.run(
-        ["npx", "playwright", "test",
-         str(TEST_FILE.relative_to(ROOT)),
-         "--reporter=json"],
+        _pw_cmd() + ["test", str(TEST_FILE.relative_to(ROOT)), "--reporter=json"],
         cwd=ROOT,
         env={**os.environ,
              "PLAYWRIGHT_JSON_OUTPUT_NAME": str(RESULTS_FILE)},
         capture_output=True,
         text=True,
+        timeout=120,
     )
     return result.returncode == 0
 

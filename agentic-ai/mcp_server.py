@@ -69,14 +69,28 @@ def _run_script(script_path: str, extra_env: dict | None = None, args: list | No
     }
 
 
+def _playwright_cmd() -> list[str]:
+    """
+    Return the command to invoke Playwright test runner.
+    Uses `node .../cli.js` directly to avoid npx hanging on paths with spaces
+    (e.g. Google Drive folders). Falls back to `npx playwright` if cli.js not found.
+    """
+    cli = ROOT / "node_modules" / "@playwright" / "test" / "cli.js"
+    if cli.exists():
+        return ["node", str(cli)]
+    return ["npx", "playwright"]
+
+
 def _run_playwright(spec_file: str, json_output_name: str) -> dict:
-    """Run `npx playwright test` for a given spec. Returns {ok, stdout, stderr}."""
+    """Run `node .../playwright/cli.js test` for a given spec. Returns {ok, stdout, stderr}."""
+    cmd = _playwright_cmd() + ["test", spec_file, "--reporter=json"]
     result = subprocess.run(
-        ["npx", "playwright", "test", spec_file, "--reporter=json"],
+        cmd,
         cwd=ROOT,
         env={**os.environ, "PLAYWRIGHT_JSON_OUTPUT_NAME": json_output_name},
         capture_output=True,
         text=True,
+        timeout=120,
     )
     return {
         "ok":     result.returncode == 0,
@@ -278,6 +292,54 @@ def report_to_jira(issue_key: str = "", results_file: str = "") -> str:
     return out
 
 
+# ─── Tool: smart_heal ────────────────────────────────────────────────────────
+
+@mcp.tool()
+def smart_heal(story_key: str = "SCRUM-1") -> str:
+    """
+    Chapter 11 — LLM-powered smart self-healing agent.
+    Runs the Playwright spec, and if it fails:
+      1. Captures the live DOM from the app
+      2. Sends error + DOM to Claude (or OpenAI) for diagnosis
+      3. Applies the LLM-proposed patch to the test file
+      4. Re-runs to confirm the fix
+      5. Posts a detailed Jira comment with LLM reasoning + fix details
+      6. Auto-creates a Jira Bug if confidence is low
+
+    Requires ANTHROPIC_API_KEY or OPENAI_API_KEY in .env.
+
+    Args:
+        story_key: Jira issue key of the story whose test to heal, e.g. "SCRUM-1".
+    """
+    log.debug(f"smart_heal called with story_key={story_key}")
+    r   = _run_script("agentic-ai/smart_heal.py", args=[story_key])
+    out = f"Smart heal complete.\n\n{r['output']}" if r["ok"] else f"Smart heal encountered issues.\n\n{r['output']}"
+    _tool_log("smart_heal", {"story_key": story_key}, out)
+    return out
+
+
+# ─── Tool: list_jira_stories ──────────────────────────────────────────────────
+
+@mcp.tool()
+def list_jira_stories(project_key: str = "") -> str:
+    """
+    List open stories from a Jira project.
+    Requires JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN in .env.
+
+    Args:
+        project_key: Jira project key, e.g. "SCRUM". Defaults to JIRA_PROJECT_KEY env var.
+    """
+    log.debug(f"list_jira_stories called with project_key={project_key}")
+    extra = {"JIRA_PROJECT_KEY": project_key} if project_key else {}
+    r = _run_script(
+        "agentic-ai/list_stories.py",
+        extra_env=extra,
+    )
+    out = r["output"] if r["ok"] else f"Failed to list stories.\n\n{r['output']}"
+    _tool_log("list_jira_stories", {"project_key": project_key}, out)
+    return out
+
+
 # ─── Start ────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -287,6 +349,7 @@ if __name__ == "__main__":
         "╚══════════════════════════════════════════════════════╝\n"
         "Tools: fetch_jira_story · generate_test_from_story · automate_jira_story\n"
         "       full_pipeline · run_playwright_tests · self_heal · report_to_jira\n"
+        "       smart_heal · list_jira_stories\n"
         "Tip:   python agentic-ai/mcp_server.py\n",
         file=sys.stderr,
     )

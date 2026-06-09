@@ -15,21 +15,21 @@ Required .env vars for LLM:         OPENAI_API_KEY
 Optional:                           OPENAI_MODEL (default: gpt-4o), APP_URL
 """
 
-import json
 import os
 import re
-import ssl
 import sys
-import urllib.request
 from pathlib import Path
 
 from dotenv import load_dotenv
-from openai import OpenAI
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-ROOT     = Path(__file__).parent.parent
-APP_URL  = os.getenv("APP_URL", "https://the-internet.herokuapp.com")
+# Use jira_client for all Jira operations
+sys.path.insert(0, str(Path(__file__).parent))
+from jira_client import fetch_story  # noqa: E402
+
+ROOT    = Path(__file__).parent.parent
+APP_URL = os.getenv("APP_URL", "https://the-internet.herokuapp.com")
 
 
 # ─── Logging ────────────────────────────────────────────────────────────────
@@ -37,64 +37,6 @@ APP_URL  = os.getenv("APP_URL", "https://the-internet.herokuapp.com")
 def log(msg: str)  -> None: print(f"[automate] {msg}")
 def ok(msg: str)   -> None: print(f"[automate] ✅ {msg}")
 def fail(msg: str) -> None: print(f"[automate] ❌ {msg}", file=sys.stderr)
-
-
-# ─── Step 1: Fetch Jira story ─────────────────────────────────────────────────
-
-def _adf_to_text(node: dict) -> str:
-    """Recursively extract plain text from an Atlassian Document Format node."""
-    if not node:
-        return ""
-    if node.get("type") == "text":
-        return node.get("text", "")
-    return " ".join(_adf_to_text(child) for child in node.get("content", []))
-
-
-def fetch_story(key: str) -> dict:
-    local_path = Path(__file__).parent / "data" / f"jira-story.{key}.json"
-    if local_path.exists():
-        log(f"Using local mock: agentic-ai/data/jira-story.{key}.json")
-        return json.loads(local_path.read_text(encoding="utf-8"))
-
-    jira_url   = os.getenv("JIRA_BASE_URL", "").rstrip("/")
-    jira_email = os.getenv("JIRA_EMAIL", "")
-    jira_token = os.getenv("JIRA_API_TOKEN", "")
-
-    if not all([jira_url, jira_email, jira_token]):
-        raise EnvironmentError(
-            f'No local mock found for "{key}" and Jira credentials are missing.\n'
-            f"Set JIRA_BASE_URL, JIRA_EMAIL, and JIRA_API_TOKEN in your .env file,\n"
-            f"or create agentic-ai/data/jira-story.{key}.json as a local mock."
-        )
-
-    import base64
-    import urllib.request
-
-    log(f"Fetching {key} from Jira API...")
-    auth  = base64.b64encode(f"{jira_email}:{jira_token}".encode()).decode()
-    url   = f"{jira_url}/rest/api/3/issue/{key}"
-    req   = urllib.request.Request(url, headers={"Authorization": f"Basic {auth}", "Accept": "application/json"})
-    ctx   = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-
-    with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:
-        data = json.loads(resp.read().decode())
-
-    full_description = _adf_to_text(data["fields"].get("description") or {})
-    ac_lines = [
-        line.strip()
-        for line in re.split(r"[\n.]+", full_description)
-        if re.match(r"^AC\d+:", line.strip(), re.IGNORECASE)
-    ]
-
-    return {
-        "key":                data["key"],
-        "summary":            data["fields"]["summary"],
-        "description":        full_description[:400],
-        "acceptanceCriteria": ac_lines if ac_lines else [f"AC1: {full_description[:200]}"],
-        "testCaseLink":       data["fields"].get("customfield_10016", ""),
-    }
 
 
 # ─── Step 2: LLM-powered test generation ─────────────────────────────────────
@@ -132,18 +74,48 @@ Rules:
 - Output ONLY valid TypeScript — no markdown code fences, no prose, no explanations"""
 
 
-def generate_test_with_llm(story: dict) -> str:
+def _strip_fences(text: str) -> str:
+    """Strip markdown code fences that LLMs sometimes add despite instructions."""
+    text = re.sub(r"^```[a-zA-Z]*\n?", "", text.strip())
+    text = re.sub(r"\n?```$", "", text)
+    return text.strip()
+
+
+def _generate_with_claude(prompt: str, story_key: str) -> str:
+    try:
+        import anthropic
+    except ImportError:
+        raise ImportError("anthropic package not installed. Run: pip install anthropic")
+
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    model   = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
+    log(f"Calling Claude ({model}) to generate Playwright test for {story_key}...")
+
+    client   = anthropic.Anthropic(api_key=api_key)
+    message  = client.messages.create(
+        model=model,
+        max_tokens=4096,
+        temperature=0.2,
+        system=(
+            "You are an expert Playwright test engineer who writes clean, idiomatic TypeScript tests. "
+            "You output ONLY runnable TypeScript code — no markdown fences, no prose."
+        ),
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return _strip_fences(message.content[0].text)
+
+
+def _generate_with_openai(prompt: str, story_key: str) -> str:
+    try:
+        from openai import OpenAI
+    except ImportError:
+        raise ImportError("openai package not installed. Run: pip install openai")
+
     api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise EnvironmentError(
-            "OPENAI_API_KEY is not set in .env — required for LLM test generation.\n"
-            "Add it to your .env file: OPENAI_API_KEY=sk-..."
-        )
+    model   = os.getenv("OPENAI_MODEL", "gpt-4o")
+    log(f"Calling OpenAI ({model}) to generate Playwright test for {story_key}...")
 
-    model = os.getenv("OPENAI_MODEL", "gpt-4o")
-    log(f"Calling OpenAI ({model}) to generate Playwright test for {story['key']}...")
-
-    client = OpenAI(api_key=api_key)
+    client   = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model=model,
         temperature=0.2,
@@ -155,14 +127,28 @@ def generate_test_with_llm(story: dict) -> str:
                     "You output ONLY runnable TypeScript code — no markdown, no prose."
                 ),
             },
-            {"role": "user", "content": _build_prompt(story)},
+            {"role": "user", "content": prompt},
         ],
     )
-    raw = response.choices[0].message.content.strip()
-    # Strip markdown code fences that the LLM sometimes adds despite instructions
-    raw = re.sub(r"^```[a-zA-Z]*\n?", "", raw)
-    raw = re.sub(r"\n?```$", "", raw)
-    return raw.strip()
+    return _strip_fences(response.choices[0].message.content)
+
+
+def generate_test_with_llm(story: dict) -> str:
+    """Generate a Playwright TypeScript test using Claude (preferred) or OpenAI."""
+    prompt = _build_prompt(story)
+
+    if os.getenv("ANTHROPIC_API_KEY"):
+        return _generate_with_claude(prompt, story["key"])
+
+    if os.getenv("OPENAI_API_KEY"):
+        return _generate_with_openai(prompt, story["key"])
+
+    raise EnvironmentError(
+        "No LLM API key found. Set one of:\n"
+        "  ANTHROPIC_API_KEY=sk-ant-...   (preferred — Claude)\n"
+        "  OPENAI_API_KEY=sk-...           (fallback — GPT-4o)\n"
+        "Add it to your .env file."
+    )
 
 
 # ─── Step 3: Write test file ──────────────────────────────────────────────────
