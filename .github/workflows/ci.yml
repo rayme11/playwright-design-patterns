@@ -51,7 +51,7 @@ jobs:
       JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
       OPENAI_API_KEY:   ${{ secrets.OPENAI_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      STORY_KEY: LOGIN-123
+      STORY_KEY: ${{ secrets.JIRA_ISSUE_KEY || 'SCRUM-6' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
